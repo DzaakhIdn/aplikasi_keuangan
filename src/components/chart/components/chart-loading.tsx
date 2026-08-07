@@ -1,0 +1,60 @@
+import { mergeClasses } from "minimal-shared/utils";
+
+import Box from "@mui/material/Box";
+import Skeleton from "@mui/material/Skeleton";
+import type { SxProps, Theme } from "@mui/material/styles";
+
+import { chartClasses } from "../classes";
+
+// ----------------------------------------------------------------------
+
+interface ChartLoadingProps {
+  sx?: SxProps<Theme> | SxProps<Theme>[];
+  className?: string;
+  type?: string;
+  [key: string]: unknown;
+}
+
+export function ChartLoading({
+  sx,
+  className,
+  type,
+  ...other
+}: ChartLoadingProps) {
+  const circularTypes = ["donut", "radialBar", "pie", "polarArea"];
+
+  return (
+    <Box
+      className={mergeClasses([chartClasses.loading, className])}
+      sx={
+        [
+          {
+            top: 0,
+            left: 0,
+            width: 1,
+            zIndex: 9,
+            height: 1,
+            p: "inherit",
+            overflow: "hidden",
+            alignItems: "center",
+            position: "absolute",
+            borderRadius: "inherit",
+            justifyContent: "center",
+          },
+          ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+        ] as SxProps<Theme>
+      }
+      {...other}
+    >
+      <Skeleton
+        variant="circular"
+        sx={{
+          width: 1,
+          height: 1,
+          borderRadius: "inherit",
+          ...(type && circularTypes.includes(type) && { borderRadius: "50%" }),
+        }}
+      />
+    </Box>
+  );
+}
