@@ -14,7 +14,7 @@ function createListQuery() {
     potongan,
     keterangan,
     created_at,
-    biaya_detail:jenis_pembayaran_keuangan(id, nama_pembayaran),
+    biaya_detail:jenis_pembayaran_keuangan(id, nama_pembayaran, nominal),
     siswa:kesiswaan(id, nis, nama_lengkap)
   `);
 }

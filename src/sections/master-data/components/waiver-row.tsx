@@ -17,6 +17,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import InputAdornment from "@mui/material/InputAdornment";
 
+import ListItemText from "@mui/material/ListItemText";
 import { Label } from "@/components/label";
 import { Iconify } from "@/components/iconify";
 import { ConfirmDialog } from "@/components/custom-dialog";
@@ -70,8 +71,18 @@ export function FeeWaiverTableRow({
 
   // Data dari join
   const siswaName = (row as any).siswa?.nama_lengkap ?? row.id_siswa;
+  const siswaNis = (row as any).siswa?.nis ?? "";
   const jenisPembayaran =
     (row as any).biaya_detail?.nama_pembayaran ?? row.id_jenis_pembayaran;
+  const nominalPembayaran: number | null =
+    (row as any).biaya_detail?.nominal ?? null;
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      maximumFractionDigits: 0,
+    }).format(value);
 
   return (
     <>
@@ -89,9 +100,31 @@ export function FeeWaiverTableRow({
           />
         </TableCell>
 
-        <TableCell sx={{ typography: "body2" }}>{siswaName}</TableCell>
+        <TableCell>
+          <ListItemText
+            primary={siswaName}
+            secondary={siswaNis ? `${siswaNis}` : undefined}
+            slotProps={{
+              primary: { sx: { typography: "body2" } },
+              secondary: { sx: { typography: "caption" } },
+            }}
+          />
+        </TableCell>
 
-        <TableCell sx={{ typography: "body2" }}>{jenisPembayaran}</TableCell>
+        <TableCell>
+          <ListItemText
+            primary={jenisPembayaran}
+            secondary={
+              nominalPembayaran !== null
+                ? formatCurrency(nominalPembayaran)
+                : undefined
+            }
+            slotProps={{
+              primary: { sx: { typography: "body2" } },
+              secondary: { sx: { typography: "caption" } },
+            }}
+          />
+        </TableCell>
 
         <TableCell>
           <Label variant="soft" color="info">
