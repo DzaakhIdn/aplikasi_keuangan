@@ -211,11 +211,16 @@ export function DashboardLayout({
   const rootSx: SxProps<Theme> = [
     {
       [`& .${layoutClasses.sidebarContainer}`]: {
+        minWidth: 0,
+        width: "100%",
         [theme.breakpoints.up(layoutQuery)]: {
-          pl: isNavMini
+          ml: isNavMini
             ? "var(--layout-nav-mini-width)"
             : "var(--layout-nav-vertical-width)",
-          transition: theme.transitions.create(["padding-left"], {
+          width: isNavMini
+            ? "calc(100% - var(--layout-nav-mini-width))"
+            : "calc(100% - var(--layout-nav-vertical-width))",
+          transition: theme.transitions.create(["margin-left", "width"], {
             easing: "var(--layout-transition-easing)",
             duration: "var(--layout-transition-duration)",
           }),

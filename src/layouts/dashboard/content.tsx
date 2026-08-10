@@ -41,6 +41,8 @@ export function DashboardContent({
         (theme) => ({
           display: 'flex',
           flex: '1 1 auto',
+          minWidth: 0,
+          width: '100%',
           flexDirection: 'column',
           pt: 'var(--layout-dashboard-content-pt)',
           pb: 'var(--layout-dashboard-content-pb)',

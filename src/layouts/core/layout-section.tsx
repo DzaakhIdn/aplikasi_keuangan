@@ -80,12 +80,17 @@ export function LayoutSection({
 
 const LayoutRoot = styled("div")({
   display: "flex",
+  width: "100%",
+  minWidth: 0,
   minHeight: "100vh",
   flexDirection: "row",
+  overflowX: "hidden",
 });
 
 const LayoutSidebarContainer = styled("div")(() => ({
   display: "flex",
   flex: "1 1 auto",
+  minWidth: 0,
+  width: "100%",
   flexDirection: "column",
 }));

@@ -7,6 +7,7 @@ import { WidgetSummary } from "../widget-summary";
 import { PaymentsSummary } from "../payments-summary";
 import { RecentTransitions } from "../recent-transitions";
 import { _mock } from "@/_mock";
+import Typography from "@mui/material/Typography";
 
 export function OverviewView() {
   const _bankingRecentTransitions = [
@@ -67,7 +68,20 @@ export function OverviewView() {
     },
   ];
   return (
-    <DashboardContent maxWidth="xl">
+    <DashboardContent
+      maxWidth="xl"
+      sx={{
+        borderTop: `solid 1px rgba(145, 158, 171, 0.12)`,
+        pt: 3,
+        mb: { xs: 3, md: 5 },
+      }}
+    >
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="h4">Website Analytics</Typography>
+        <Typography variant="body2" sx={{ mt: 0.75, color: "text.secondary" }}>
+          Statistik trafik diperbarui otomatis setiap 10 detik.
+        </Typography>
+      </Box>
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <WidgetSummary
