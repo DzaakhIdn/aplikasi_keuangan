@@ -247,12 +247,12 @@ export function PaymentCounterView() {
       <Box
         sx={{
           display: "grid",
-          gap: 3,
+          gap: { xs: 2, md: 3 },
           gridTemplateColumns: { xs: "1fr", lg: "0.95fr 1.55fr" },
           alignItems: "start",
         }}
       >
-        <Stack spacing={3}>
+        <Stack spacing={{ xs: 2, md: 3 }}>
           <Card
             sx={{
               overflow: "hidden",
@@ -261,12 +261,12 @@ export function PaymentCounterView() {
                 "linear-gradient(135deg, #0F766E 0%, #16A34A 48%, #F59E0B 125%)",
             }}
           >
-            <Box sx={{ p: 3 }}>
+            <Box sx={{ p: { xs: 2, sm: 3 } }}>
               <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
                 <Box
                   sx={{
-                    width: 56,
-                    height: 56,
+                    width: { xs: 48, sm: 56 },
+                    height: { xs: 48, sm: 56 },
                     display: "grid",
                     borderRadius: 2,
                     placeItems: "center",
@@ -277,24 +277,24 @@ export function PaymentCounterView() {
                   <Iconify icon="solar:wallet-money-bold-duotone" width={32} />
                 </Box>
                 <Box>
-                  <Typography variant="h5">Loket Pembayaran</Typography>
+                  <Typography variant={{ xs: "h6", sm: "h5" }}>Loket Pembayaran</Typography>
                 </Box>
               </Stack>
 
-              <Divider sx={{ my: 3, borderColor: "rgba(255,255,255,0.24)" }} />
+              <Divider sx={{ my: { xs: 2, sm: 3 }, borderColor: "rgba(255,255,255,0.24)" }} />
 
               <Stack direction="row" spacing={2}>
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="caption" sx={{ opacity: 0.72 }}>
                     Dipilih
                   </Typography>
-                  <Typography variant="h4">{selectedItems.length}</Typography>
+                  <Typography variant={{ xs: "h5", sm: "h4" }}>{selectedItems.length}</Typography>
                 </Box>
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="caption" sx={{ opacity: 0.72 }}>
                     Total Bayar
                   </Typography>
-                  <Typography variant="h4">
+                  <Typography variant={{ xs: "h6", sm: "h4" }} noWrap>
                     {formatCurrency(totalPayment)}
                   </Typography>
                 </Box>
@@ -303,14 +303,14 @@ export function PaymentCounterView() {
           </Card>
 
           <Card>
-            {isSubmitting}
+            {isSubmitting && <LinearProgress />}
             <CardHeader
               title="Data Siswa"
               subheader="Cari siswa aktif untuk melakukan pembayaran"
-              sx={{ mb: 4 }}
+              sx={{ pb: 1 }}
             />
 
-            <Stack spacing={2.5} sx={{ p: 3, pt: 0 }}>
+            <Stack spacing={2.5} sx={{ p: { xs: 2, sm: 3 }, pt: 0 }}>
               <Autocomplete
                 options={studentsQuery.data ?? []}
                 loading={studentsQuery.isLoading}
@@ -349,6 +349,7 @@ export function PaymentCounterView() {
 
                   <Button
                     variant="outlined"
+                    fullWidth
                     startIcon={<Iconify icon="solar:refresh-bold" />}
                     onClick={handleSyncBills}
                     disabled={syncBills.isPending}
@@ -362,9 +363,9 @@ export function PaymentCounterView() {
 
           <Card>
             {isSubmitting && <LinearProgress />}
-            <CardHeader title="Konfirmasi Pembayaran" sx={{ mb: 4 }} />
+            <CardHeader title="Konfirmasi Pembayaran" sx={{ pb: 1 }} />
 
-            <Stack spacing={2.5} sx={{ p: 3, pt: 0 }}>
+            <Stack spacing={2.5} sx={{ p: { xs: 2, sm: 3 }, pt: 0 }}>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                 <TextField
                   select
@@ -412,6 +413,7 @@ export function PaymentCounterView() {
                 <Alert
                   severity="success"
                   icon={<Iconify icon="solar:file-check-bold" />}
+                  sx={{ wordBreak: "break-word" }}
                 >
                   {proofFile.name}
                 </Alert>
@@ -428,7 +430,7 @@ export function PaymentCounterView() {
 
               <Box
                 sx={{
-                  p: 2.5,
+                  p: { xs: 2, sm: 2.5 },
                   borderRadius: 2,
                   bgcolor: "background.neutral",
                   border: "1px dashed",
@@ -438,7 +440,7 @@ export function PaymentCounterView() {
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
                   Total pembayaran
                 </Typography>
-                <Typography variant="h3">
+                <Typography variant={{ xs: "h4", sm: "h3" }} sx={{ wordBreak: "break-word" }}>
                   {formatCurrency(totalPayment)}
                 </Typography>
               </Box>
@@ -464,7 +466,7 @@ export function PaymentCounterView() {
           </Card>
         </Stack>
 
-        <Stack spacing={3}>
+        <Stack spacing={{ xs: 2, md: 3 }}>
           <Box
             sx={{
               display: "grid",
@@ -493,10 +495,78 @@ export function PaymentCounterView() {
           </Box>
 
           <Card>
-            {isSubmitting}
-            <CardHeader title="Daftar Tagihan" sx={{ mb: 4 }} />
+            {isSubmitting && <LinearProgress />}
+            <CardHeader title="Daftar Tagihan" sx={{ pb: 1 }} />
 
-            <TableContainer sx={{ overflowX: "auto" }}>
+            <Stack spacing={1.5} sx={{ display: { xs: "flex", md: "none" }, p: 2, pt: 0 }}>
+              {bills.map((bill) => {
+                const payment = bill.jenis_pembayaran_keuangan;
+                const checked = selectedAmounts[bill.id] !== undefined;
+
+                return (
+                  <Box
+                    key={bill.id}
+                    sx={{
+                      p: 2,
+                      borderRadius: 2,
+                      border: "1px solid",
+                      borderColor: checked ? "primary.main" : "divider",
+                      bgcolor: checked ? "primary.lighter" : "background.paper",
+                    }}
+                  >
+                    <Stack spacing={1.5}>
+                      <Stack direction="row" spacing={1.5} sx={{ alignItems: "flex-start" }}>
+                        <Checkbox checked={checked} onChange={() => handleToggleBill(bill)} sx={{ p: 0.25 }} />
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Typography variant="subtitle2" sx={{ wordBreak: "break-word" }}>
+                            {payment?.nama_pembayaran ?? bill.id_jenis_pembayaran}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                            {payment?.kode_jenis_pembayaran ?? "-"} • {formatPeriod(bill)}
+                          </Typography>
+                        </Box>
+                      </Stack>
+
+                      <Box sx={{ display: "grid", gap: 1, gridTemplateColumns: "1fr 1fr" }}>
+                        <AmountInfo label="Tagihan" value={formatCurrency(bill.nominal_tagihan)} />
+                        <AmountInfo label="Sisa" value={formatCurrency(bill.sisa_tagihan)} />
+                      </Box>
+
+                      <TextField
+                        fullWidth
+                        size="small"
+                        type="number"
+                        label="Nominal bayar"
+                        disabled={!checked}
+                        value={selectedAmounts[bill.id] ?? ""}
+                        onChange={(event) =>
+                          handleChangeAmount(
+                            bill,
+                            parseInt(event.target.value, 10) || 0,
+                          )
+                        }
+                        slotProps={{
+                          htmlInput: {
+                            min: 0,
+                            max: bill.sisa_tagihan,
+                            step: 1000,
+                          },
+                        }}
+                      />
+                    </Stack>
+                  </Box>
+                );
+              })}
+
+              <TableNoData
+                notFound={
+                  !billsQuery.isLoading && !!selectedStudent && !bills.length
+                }
+              />
+              <TableNoData notFound={!selectedStudent} />
+            </Stack>
+
+            <TableContainer sx={{ display: { xs: "none", md: "block" }, width: 1, maxWidth: 1, overflowX: "auto" }}>
               <Table sx={{ minWidth: 980 }}>
                 <TableHeadCustom headCells={TABLE_HEAD} />
                 <TableBody>
@@ -614,5 +684,18 @@ function SummaryCard({
         </Box>
       </Stack>
     </Card>
+  );
+}
+
+function AmountInfo({ label, value }: { label: string; value: string }) {
+  return (
+    <Box sx={{ p: 1.25, borderRadius: 1.5, bgcolor: "background.neutral", minWidth: 0 }}>
+      <Typography variant="caption" sx={{ color: "text.secondary" }}>
+        {label}
+      </Typography>
+      <Typography variant="body2" sx={{ fontWeight: 600, wordBreak: "break-word" }}>
+        {value}
+      </Typography>
+    </Box>
   );
 }

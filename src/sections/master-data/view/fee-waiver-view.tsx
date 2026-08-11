@@ -208,7 +208,7 @@ export function FeeWaiverView() {
               }
             />
 
-            <Scrollbar>
+            <Scrollbar sx={{ width: 1 }}>
               <Table
                 size={table.dense ? "small" : "medium"}
                 sx={{ minWidth: 800 }}

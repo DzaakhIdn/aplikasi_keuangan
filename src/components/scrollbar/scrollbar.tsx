@@ -77,6 +77,9 @@ const ScrollbarRoot = styled(SimpleBar, {
       }
     : {
         display: "block",
+        width: "100%",
+        maxWidth: "100%",
+        overflowX: "auto",
       }),
   ...(fillContent && {
     "& .simplebar-wrapper": {

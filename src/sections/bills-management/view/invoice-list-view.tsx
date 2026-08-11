@@ -1,7 +1,5 @@
-import { sumBy } from "es-toolkit";
-import { useState, useCallback } from "react";
-import { varAlpha } from "minimal-shared/utils";
-import { useBoolean, useSetState } from "minimal-shared/hooks";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
@@ -9,481 +7,471 @@ import Tabs from "@mui/material/Tabs";
 import Card from "@mui/material/Card";
 import Table from "@mui/material/Table";
 import Stack from "@mui/material/Stack";
-import Button from "@mui/material/Button";
+import Avatar from "@mui/material/Avatar";
 import Divider from "@mui/material/Divider";
 import Tooltip from "@mui/material/Tooltip";
+import TableRow from "@mui/material/TableRow";
+import Checkbox from "@mui/material/Checkbox";
+import TableCell from "@mui/material/TableCell";
+import TextField from "@mui/material/TextField";
 import TableBody from "@mui/material/TableBody";
-import { useTheme } from "@mui/material/styles";
 import IconButton from "@mui/material/IconButton";
+import MenuItem from "@mui/material/MenuItem";
+import { useTheme } from "@mui/material/styles";
+import Typography from "@mui/material/Typography";
+import TableContainer from "@mui/material/TableContainer";
+import InputAdornment from "@mui/material/InputAdornment";
 
 import { paths } from "@/routes/paths";
-import { RouterLink } from "@/routes/components";
-
-import { fIsAfter, fIsBetween } from "@/utils/format-time";
-
-import { DashboardContent } from "@/layouts/dashboard";
-import { _invoices, INVOICE_SERVICE_OPTIONS } from "@/_mock/_invoice";
-
+import { fDate } from "@/utils/format-time";
+import { fCurrency } from "@/utils/format-number";
 import { Label } from "@/components/label";
-import { toast } from "@/components/snackbar";
 import { Iconify } from "@/components/iconify";
 import { Scrollbar } from "@/components/scrollbar";
-import { ConfirmDialog } from "@/components/custom-dialog";
+import { DashboardContent } from "@/layouts/dashboard";
 import { CustomBreadcrumbs } from "@/components/custom-breadcrumbs";
-import {
-  useTable,
-  emptyRows,
-  rowInPage,
-  TableNoData,
-  getComparator,
-  TableEmptyRows,
-  TableHeadCustom,
-  TableSelectedAction,
-  TablePaginationCustom,
-} from "@/components/table";
-
+import { TableHeadCustom, TableNoData, TablePaginationCustom, TableSelectedAction, useTable } from "@/components/table";
+import { billsDataQueries } from "@/features/bills-data/api/bills-data.queries";
+import type { BillDataRow, BillStatus } from "@/features/bills-data/api/bills-data.repository";
 import { InvoiceAnalytic } from "../invoice-analytic";
-import { InvoiceTableRow } from "../invoice-table-row";
-import { InvoiceTableToolbar } from "../invoice-table-toolbar";
-import { InvoiceTableFiltersResult } from "../invoice-table-filters-result";
 
 // ----------------------------------------------------------------------
 
-const TABLE_HEAD = [
-  { id: "invoiceNumber", label: "NAMA SANTRI" },
-  { id: "createDate", label: "DIBAYAR" },
-  { id: "dueDate", label: "JATUH TEMPO" },
-  { id: "price", label: "JUMLAH BAYAR" },
-  { id: "jenisPembayaran", label: "JENIS PEMBAYARAN", align: "center" },
-  { id: "status", label: "STATUS" },
-  { id: "", label: "" },
+const MONTHS = [
+  "Januari",
+  "Februari",
+  "Maret",
+  "April",
+  "Mei",
+  "Juni",
+  "Juli",
+  "Agustus",
+  "September",
+  "Oktober",
+  "November",
+  "Desember",
 ];
+
+const TABLE_HEAD = [
+  { id: "siswa", label: "SANTRI", width: 240 },
+  { id: "jenis", label: "JENIS PEMBAYARAN", width: 220 },
+  { id: "periode", label: "PERIODE", width: 140 },
+  { id: "tagihan", label: "TAGIHAN", width: 140 },
+  { id: "dibayar", label: "DIBAYAR", width: 140 },
+  { id: "sisa", label: "SISA", width: 140 },
+  { id: "jatuh_tempo", label: "JATUH TEMPO", width: 140 },
+  { id: "status", label: "STATUS", width: 130 },
+  { id: "actions", label: "", width: 80 },
+];
+
+const STATUS_OPTIONS: { value: "all" | BillStatus; label: string; color: "default" | "success" | "warning" | "error" | "info" }[] = [
+  { value: "all", label: "Semua", color: "default" },
+  { value: "pending", label: "Pending", color: "warning" },
+  { value: "belum_lunas", label: "Belum Lunas", color: "error" },
+  { value: "sebagian", label: "Sebagian", color: "info" },
+  { value: "lunas", label: "Lunas", color: "success" },
+  { value: "dibebaskan", label: "Dibebaskan", color: "default" },
+  { value: "dibatalkan", label: "Dibatalkan", color: "error" },
+];
+
+function formatPeriod(row: BillDataRow) {
+  if (!row.periode_bulan || !row.periode_tahun) return "Sekali Bayar";
+  return `${MONTHS[row.periode_bulan - 1]} ${row.periode_tahun}`;
+}
+
+function getStatusConfig(status: BillStatus) {
+  return STATUS_OPTIONS.find((item) => item.value === status) ?? STATUS_OPTIONS[0];
+}
+
+function filterBills(rows: BillDataRow[], keyword: string, status: "all" | BillStatus) {
+  let result = rows;
+
+  if (status !== "all") {
+    result = result.filter((row) => row.status === status);
+  }
+
+  if (keyword) {
+    const value = keyword.toLowerCase();
+    result = result.filter((row) =>
+      [
+        row.siswa?.nama_lengkap,
+        row.siswa?.nis,
+        row.jenis_pembayaran_keuangan?.kode_jenis_pembayaran,
+        row.jenis_pembayaran_keuangan?.nama_pembayaran,
+        row.tahun_ajaran?.tahun_ajaran,
+      ].some((field) => field?.toLowerCase().includes(value)),
+    );
+  }
+
+  return result;
+}
+
+function getUniqueOptions(rows: BillDataRow[], getValue: (row: BillDataRow) => string | undefined) {
+  return [...new Set(rows.map(getValue).filter(Boolean))] as string[];
+}
 
 // ----------------------------------------------------------------------
 
 export function InvoiceListView() {
   const theme = useTheme();
+  const table = useTable();
+  const { data = [], isLoading } = useQuery(billsDataQueries.all());
+  const [keyword, setKeyword] = useState("");
+  const [status, setStatus] = useState<"all" | BillStatus>("all");
+  const [paymentType, setPaymentType] = useState("all");
+  const [academicYear, setAcademicYear] = useState("all");
 
-  const table = useTable({ defaultOrderBy: "createDate" });
-
-  const confirmDialog = useBoolean();
-
-  const [tableData, setTableData] = useState(_invoices);
-
-  const filters = useSetState({
-    name: "",
-    service: [],
-    status: "all",
-    startDate: null,
-    endDate: null,
-  });
-  const { state: currentFilters, setState: updateFilters } = filters;
-
-  const dateError = fIsAfter(currentFilters.startDate, currentFilters.endDate);
-
-  const dataFiltered = applyFilter({
-    inputData: tableData,
-    comparator: getComparator(table.order, table.orderBy),
-    filters: currentFilters,
-    dateError,
-  });
-
-  const dataInPage = rowInPage(dataFiltered, table.page, table.rowsPerPage);
-
-  const canReset =
-    !!currentFilters.name ||
-    currentFilters.service.length > 0 ||
-    currentFilters.status !== "all" ||
-    (!!currentFilters.startDate && !!currentFilters.endDate);
-
-  const notFound = (!dataFiltered.length && canReset) || !dataFiltered.length;
-
-  const getInvoiceLength = (status) =>
-    tableData.filter((item) => item.status === status).length;
-
-  const getTotalAmount = (status) =>
-    sumBy(
-      tableData.filter((item) => item.status === status),
-      (invoice) => invoice.totalAmount,
-    );
-
-  const getPercentByStatus = (status) =>
-    (getInvoiceLength(status) / tableData.length) * 100;
-
-  const TABS: {
-    value: string;
-    label: string;
-    color: "default" | "success" | "warning" | "error";
-    count: number;
-  }[] = [
-    {
-      value: "all",
-      label: "All",
-      color: "default",
-      count: tableData.length,
-    },
-    {
-      value: "paid",
-      label: "Paid",
-      color: "success",
-      count: getInvoiceLength("paid"),
-    },
-    {
-      value: "pending",
-      label: "Pending",
-      color: "warning",
-      count: getInvoiceLength("pending"),
-    },
-    {
-      value: "overdue",
-      label: "Overdue",
-      color: "error",
-      count: getInvoiceLength("overdue"),
-    },
-    {
-      value: "draft",
-      label: "Draft",
-      color: "default",
-      count: getInvoiceLength("draft"),
-    },
-  ];
-
-  const handleDeleteRow = useCallback(
-    (id) => {
-      const deleteRow = tableData.filter((row) => row.id !== id);
-
-      toast.success("Delete success!");
-
-      setTableData(deleteRow);
-
-      table.onUpdatePageDeleteRow(dataInPage.length);
-    },
-    [dataInPage.length, table, tableData],
+  const paymentTypeOptions = useMemo(
+    () => getUniqueOptions(data, (row) => row.jenis_pembayaran_keuangan?.nama_pembayaran),
+    [data],
   );
-
-  const handleDeleteRows = useCallback(() => {
-    const deleteRows = tableData.filter(
-      (row) => !table.selected.includes(row.id),
-    );
-
-    toast.success("Delete success!");
-
-    setTableData(deleteRows);
-
-    table.onUpdatePageDeleteRows(dataInPage.length, dataFiltered.length);
-  }, [dataFiltered.length, dataInPage.length, table, tableData]);
-
-  const handleFilterStatus = useCallback(
-    (event, newValue) => {
-      table.onResetPage();
-      updateFilters({ status: newValue });
-    },
-    [updateFilters, table],
+  const academicYearOptions = useMemo(
+    () => getUniqueOptions(data, (row) => row.tahun_ajaran?.tahun_ajaran),
+    [data],
   );
+  const filteredData = useMemo(() => {
+    let result = filterBills(data, keyword, status);
 
-  const renderConfirmDialog = () => (
-    <ConfirmDialog
-      open={confirmDialog.value}
-      onClose={confirmDialog.onFalse}
-      title="Delete"
-      content={
-        <>
-          Are you sure want to delete <strong> {table.selected.length} </strong>{" "}
-          items?
-        </>
-      }
-      action={
-        <Button
-          variant="contained"
-          color="error"
-          onClick={() => {
-            handleDeleteRows();
-            confirmDialog.onFalse();
-          }}
-        >
-          Delete
-        </Button>
-      }
-    />
-  );
+    if (paymentType !== "all") {
+      result = result.filter((row) => row.jenis_pembayaran_keuangan?.nama_pembayaran === paymentType);
+    }
+
+    if (academicYear !== "all") {
+      result = result.filter((row) => row.tahun_ajaran?.tahun_ajaran === academicYear);
+    }
+
+    return result;
+  }, [academicYear, data, keyword, paymentType, status]);
+  const visibleRows = filteredData.slice(table.page * table.rowsPerPage, table.page * table.rowsPerPage + table.rowsPerPage);
+  const paidRows = filteredData.filter((row) => row.status === "lunas");
+  const totalPaidSuccess = paidRows.reduce((total, row) => total + row.nominal_dibayar, 0);
+  const totalSisa = filteredData.reduce((total, row) => total + row.sisa_tagihan, 0);
+  const getStatusRows = (value: BillStatus) => data.filter((row) => row.status === value);
+  const getStatusAmount = (value: BillStatus) => getStatusRows(value).reduce((total, row) => total + row.nominal_tagihan, 0);
+  const getStatusPercent = (value: BillStatus) => (data.length ? (getStatusRows(value).length / data.length) * 100 : 0);
+
+  const handleChangeStatus = (_event: React.SyntheticEvent, value: "all" | BillStatus) => {
+    setStatus(value);
+    table.onResetPage();
+  };
 
   return (
-    <>
-      <DashboardContent maxWidth={false}>
-        <CustomBreadcrumbs
-          heading="List Data Tagihan"
-          links={[
-            { name: "Dashboard", href: paths.ROOTS },
-            { name: "Manajemen Tagihan", href: "" },
-            { name: "Data Tagihan" },
-          ]}
-          action={
-            <Button
-              component={RouterLink}
-              href={""}
-              variant="contained"
-              startIcon={<Iconify icon="mingcute:add-line" />}
-            >
-              New invoice
-            </Button>
-          }
-          sx={{ mb: { xs: 3, md: 5 } }}
-        />
+    <DashboardContent maxWidth={false} sx={{ borderTop: "solid 1px rgba(145, 158, 171, 0.12)", pt: 3 }}>
+      <CustomBreadcrumbs
+        heading="Data Tagihan"
+        links={[{ name: "Dashboard", href: paths.ROOTS }, { name: "Manajemen Tagihan" }, { name: "Data Tagihan" }]}
+        sx={{ mb: { xs: 3, md: 5 } }}
+      />
 
-        <Card sx={{ mb: { xs: 3, md: 5 } }}>
-          <Scrollbar sx={{ minHeight: 108 }}>
-            <Stack
-              divider={
-                <Divider
-                  orientation="vertical"
-                  flexItem
-                  sx={{ borderStyle: "dashed" }}
-                />
+      <Card sx={{ mb: { xs: 3, md: 5 } }}>
+        <Scrollbar sx={{ width: 1, minHeight: 108 }}>
+          <Stack
+            divider={<Divider orientation="vertical" flexItem sx={{ borderStyle: "dashed" }} />}
+            sx={{ py: 2, flexDirection: "row" }}
+          >
+            <InvoiceAnalytic
+              title="Total Berhasil"
+              total={paidRows.length}
+              percent={filteredData.length ? (paidRows.length / filteredData.length) * 100 : 0}
+              price={totalPaidSuccess}
+              icon="solar:bill-list-bold-duotone"
+              color={theme.vars.palette.info.main}
+            />
+            <InvoiceAnalytic
+              title="Lunas"
+              total={getStatusRows("lunas").length}
+              percent={getStatusPercent("lunas")}
+              price={getStatusAmount("lunas")}
+              icon="solar:file-check-bold-duotone"
+              color={theme.vars.palette.success.main}
+            />
+            <InvoiceAnalytic
+              title="Pending"
+              total={getStatusRows("pending").length}
+              percent={getStatusPercent("pending")}
+              price={getStatusAmount("pending")}
+              icon="solar:sort-by-time-bold-duotone"
+              color={theme.vars.palette.warning.main}
+            />
+            <InvoiceAnalytic
+              title="Sebagian"
+              total={getStatusRows("sebagian").length}
+              percent={getStatusPercent("sebagian")}
+              price={getStatusAmount("sebagian")}
+              icon="solar:wallet-money-bold-duotone"
+              color={theme.vars.palette.info.main}
+            />
+            <InvoiceAnalytic
+              title="Sisa"
+              total={filteredData.length}
+              percent={100}
+              price={totalSisa}
+              icon="solar:bill-cross-bold-duotone"
+              color={theme.vars.palette.error.main}
+            />
+          </Stack>
+        </Scrollbar>
+      </Card>
+
+      <Card>
+        <Tabs
+          value={status}
+          onChange={handleChangeStatus}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ px: 2.5, borderBottom: "1px solid", borderColor: "divider" }}
+        >
+          {STATUS_OPTIONS.map((item) => (
+            <Tab
+              key={item.value}
+              value={item.value}
+              label={item.label}
+              iconPosition="end"
+              icon={
+                <Label variant={item.value === status ? "filled" : "soft"} color={item.color}>
+                  {item.value === "all" ? data.length : data.filter((row) => row.status === item.value).length}
+                </Label>
               }
-              sx={{ py: 2, flexDirection: "row" }}
-            >
-              <InvoiceAnalytic
-                title="Total"
-                total={tableData.length}
-                percent={100}
-                price={sumBy(tableData, (invoice) => invoice.totalAmount)}
-                icon="solar:bill-list-bold-duotone"
-                color={theme.vars.palette.info.main}
-              />
+            />
+          ))}
+        </Tabs>
 
-              <InvoiceAnalytic
-                title="Dibayar"
-                total={getInvoiceLength("paid")}
-                percent={getPercentByStatus("paid")}
-                price={getTotalAmount("paid")}
-                icon="solar:file-check-bold-duotone"
-                color={theme.vars.palette.success.main}
-              />
+        <Box
+          sx={{
+            p: 2.5,
+            gap: 2,
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "1fr 220px 220px" },
+          }}
+        >
+          <TextField
+            fullWidth
+            value={keyword}
+            onChange={(event) => {
+              setKeyword(event.target.value);
+              table.onResetPage();
+            }}
+            placeholder="Cari nama santri, NIS, jenis pembayaran, atau tahun ajaran..."
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Iconify icon="eva:search-fill" sx={{ color: "text.disabled" }} />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
 
-              <InvoiceAnalytic
-                title="Pending"
-                total={getInvoiceLength("pending")}
-                percent={getPercentByStatus("pending")}
-                price={getTotalAmount("pending")}
-                icon="solar:sort-by-time-bold-duotone"
-                color={theme.vars.palette.warning.main}
-              />
-
-              <InvoiceAnalytic
-                title="Jatuh Tempo"
-                total={getInvoiceLength("overdue")}
-                percent={getPercentByStatus("overdue")}
-                price={getTotalAmount("overdue")}
-                icon="solar:bell-bing-bold-duotone"
-                color={theme.vars.palette.error.main}
-              />
-            </Stack>
-          </Scrollbar>
-        </Card>
-
-        <Card>
-          <Tabs
-            value={currentFilters.status}
-            onChange={handleFilterStatus}
-            sx={{
-              px: 2.5,
-              boxShadow: `inset 0 -2px 0 0 ${varAlpha(theme.vars.palette.grey["500Channel"], 0.08)}`,
+          <TextField
+            select
+            label="Jenis Pembayaran"
+            value={paymentType}
+            onChange={(event) => {
+              setPaymentType(event.target.value);
+              table.onResetPage();
             }}
           >
-            {TABS.map((tab) => (
-              <Tab
-                key={tab.value}
-                value={tab.value}
-                label={tab.label}
-                iconPosition="end"
-                icon={
-                  <Label
-                    variant={
-                      ((tab.value === "all" ||
-                        tab.value === currentFilters.status) &&
-                        "filled") ||
-                      "soft"
-                    }
-                    color={tab.color}
-                  >
-                    {tab.count}
-                  </Label>
-                }
-              />
+            <MenuItem value="all">Semua jenis</MenuItem>
+            {paymentTypeOptions.map((option) => (
+              <MenuItem key={option} value={option}>
+                {option}
+              </MenuItem>
             ))}
-          </Tabs>
+          </TextField>
 
-          <InvoiceTableToolbar
-            filters={filters}
-            dateError={dateError}
-            onResetPage={table.onResetPage}
-            options={{
-              services: INVOICE_SERVICE_OPTIONS.map((option) => option.name),
+          <TextField
+            select
+            label="Tahun Ajaran"
+            value={academicYear}
+            onChange={(event) => {
+              setAcademicYear(event.target.value);
+              table.onResetPage();
             }}
+          >
+            <MenuItem value="all">Semua tahun</MenuItem>
+            {academicYearOptions.map((option) => (
+              <MenuItem key={option} value={option}>
+                {option}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Box>
+
+        <Stack spacing={1.5} sx={{ display: { xs: "flex", md: "none" }, p: 2, pt: 0 }}>
+          {visibleRows.map((row) => (
+            <BillMobileCard
+              key={row.id}
+              row={row}
+              selected={table.selected.includes(row.id)}
+              onSelect={() => table.onSelectRow(row.id)}
+            />
+          ))}
+          <TableNoData notFound={!isLoading && !filteredData.length} />
+        </Stack>
+
+        <Box sx={{ position: "relative" }}>
+          <TableSelectedAction
+            dense={table.dense}
+            numSelected={table.selected.length}
+            rowCount={filteredData.length}
+            onSelectAllRows={(checked) =>
+              table.onSelectAllRows(
+                checked,
+                filteredData.map((row) => row.id),
+              )
+            }
+            action={
+              <Tooltip title="Aksi massal belum tersedia">
+                <IconButton color="primary">
+                  <Iconify icon="eva:more-vertical-fill" />
+                </IconButton>
+              </Tooltip>
+            }
           />
 
-          {canReset && (
-            <InvoiceTableFiltersResult
-              filters={filters}
-              onResetPage={table.onResetPage}
-              totalResults={dataFiltered.length}
-              sx={{ p: 2.5, pt: 0 }}
-            />
-          )}
-
-          <Box sx={{ position: "relative" }}>
-            <TableSelectedAction
-              dense={table.dense}
+        <TableContainer sx={{ display: { xs: "none", md: "block" }, overflowX: "auto" }}>
+          <Table sx={{ minWidth: 1180 }}>
+            <TableHeadCustom
+              headCells={TABLE_HEAD}
+              rowCount={filteredData.length}
               numSelected={table.selected.length}
-              rowCount={dataFiltered.length}
-              onSelectAllRows={(checked) => {
+              onSelectAllRows={(checked) =>
                 table.onSelectAllRows(
                   checked,
-                  dataFiltered.map((row) => row.id),
-                );
-              }}
-              action={
-                <Box sx={{ display: "flex" }}>
-                  <Tooltip title="Sent">
-                    <IconButton color="primary">
-                      <Iconify icon="custom:send-fill" />
-                    </IconButton>
-                  </Tooltip>
-
-                  <Tooltip title="Download">
-                    <IconButton color="primary">
-                      <Iconify icon="solar:download-bold" />
-                    </IconButton>
-                  </Tooltip>
-
-                  <Tooltip title="Print">
-                    <IconButton color="primary">
-                      <Iconify icon="solar:printer-minimalistic-bold" />
-                    </IconButton>
-                  </Tooltip>
-
-                  <Tooltip title="Delete">
-                    <IconButton color="primary" onClick={confirmDialog.onTrue}>
-                      <Iconify icon="solar:trash-bin-trash-bold" />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
+                  filteredData.map((row) => row.id),
+                )
               }
             />
+            <TableBody>
+              {visibleRows.map((row) => {
+                const statusConfig = getStatusConfig(row.status);
 
-            <Scrollbar sx={{ minHeight: 444 }}>
-              <Table
-                size={table.dense ? "small" : "medium"}
-                sx={{ minWidth: 800 }}
-              >
-                <TableHeadCustom
-                  order={table.order}
-                  orderBy={table.orderBy}
-                  headCells={TABLE_HEAD}
-                  rowCount={dataFiltered.length}
-                  numSelected={table.selected.length}
-                  onSort={table.onSort}
-                  onSelectAllRows={(checked) =>
-                    table.onSelectAllRows(
-                      checked,
-                      dataFiltered.map((row) => row.id),
-                    )
-                  }
-                />
-
-                <TableBody>
-                  {dataFiltered
-                    .slice(
-                      table.page * table.rowsPerPage,
-                      table.page * table.rowsPerPage + table.rowsPerPage,
-                    )
-                    .map((row) => (
-                      <InvoiceTableRow
-                        key={row.id}
-                        row={row}
-                        selected={table.selected.includes(row.id)}
-                        onSelectRow={() => table.onSelectRow(row.id)}
-                        onDeleteRow={() => handleDeleteRow(row.id)}
-                        editHref={""}
-                        detailsHref={""}
+                return (
+                  <TableRow hover key={row.id}>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={table.selected.includes(row.id)}
+                        onClick={() => table.onSelectRow(row.id)}
+                        slotProps={{
+                          input: {
+                            id: `${row.id}-checkbox`,
+                            "aria-label": `${row.id} checkbox`,
+                          },
+                        }}
                       />
-                    ))}
+                    </TableCell>
+                    <TableCell>
+                      <StudentCell row={row} />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{row.jenis_pembayaran_keuangan?.nama_pembayaran ?? "-"}</Typography>
+                      <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                        {row.jenis_pembayaran_keuangan?.kode_jenis_pembayaran ?? "-"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{formatPeriod(row)}</TableCell>
+                    <TableCell>{fCurrency(row.nominal_tagihan)}</TableCell>
+                    <TableCell>{fCurrency(row.nominal_dibayar)}</TableCell>
+                    <TableCell>{fCurrency(row.sisa_tagihan)}</TableCell>
+                    <TableCell>{row.tanggal_jatuh_tempo ? fDate(row.tanggal_jatuh_tempo) : "-"}</TableCell>
+                    <TableCell>
+                      <Label variant="soft" color={statusConfig.color}>{statusConfig.label}</Label>
+                    </TableCell>
+                    <TableCell align="right">
+                      <BillActions row={row} />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              <TableNoData notFound={!isLoading && !filteredData.length} />
+            </TableBody>
+          </Table>
+        </TableContainer>
+        </Box>
 
-                  <TableEmptyRows
-                    height={table.dense ? 56 : 56 + 20}
-                    emptyRows={emptyRows(
-                      table.page,
-                      table.rowsPerPage,
-                      dataFiltered.length,
-                    )}
-                  />
-
-                  <TableNoData notFound={notFound} />
-                </TableBody>
-              </Table>
-            </Scrollbar>
-          </Box>
-
-          <TablePaginationCustom
-            page={table.page}
-            dense={table.dense}
-            count={dataFiltered.length}
-            rowsPerPage={table.rowsPerPage}
-            onPageChange={table.onChangePage}
-            onChangeDense={table.onChangeDense}
-            onRowsPerPageChange={table.onChangeRowsPerPage}
-          />
-        </Card>
-      </DashboardContent>
-
-      {renderConfirmDialog()}
-    </>
+        <TablePaginationCustom
+          page={table.page}
+          dense={table.dense}
+          count={filteredData.length}
+          rowsPerPage={table.rowsPerPage}
+          onPageChange={table.onChangePage}
+          onChangeDense={table.onChangeDense}
+          onRowsPerPageChange={table.onChangeRowsPerPage}
+        />
+      </Card>
+    </DashboardContent>
   );
 }
 
-// ----------------------------------------------------------------------
+function BillMobileCard({ row, selected, onSelect }: { row: BillDataRow; selected: boolean; onSelect: () => void }) {
+  const statusConfig = getStatusConfig(row.status);
 
-function applyFilter({ inputData, comparator, filters, dateError }) {
-  const { name, status, service, startDate, endDate } = filters;
+  return (
+    <Box sx={{ p: 2, borderRadius: 2, border: "1px solid", borderColor: selected ? "primary.main" : "divider" }}>
+      <Stack spacing={1.5}>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: "flex-start", justifyContent: "space-between" }}>
+          <Stack direction="row" spacing={1} sx={{ minWidth: 0, alignItems: "center" }}>
+            <Checkbox checked={selected} onChange={onSelect} sx={{ p: 0.25 }} />
+            <StudentCell row={row} />
+          </Stack>
+          <Stack direction="row" spacing={0.5} sx={{ alignItems: "center", flexShrink: 0 }}>
+            <Label variant="soft" color={statusConfig.color}>{statusConfig.label}</Label>
+            <BillActions row={row} />
+          </Stack>
+        </Stack>
 
-  const stabilizedThis = inputData.map((el, index) => [el, index]);
+        <Box>
+          <Typography variant="body2">{row.jenis_pembayaran_keuangan?.nama_pembayaran ?? "-"}</Typography>
+          <Typography variant="caption" sx={{ color: "text.secondary" }}>
+            {row.jenis_pembayaran_keuangan?.kode_jenis_pembayaran ?? "-"} • {formatPeriod(row)}
+          </Typography>
+        </Box>
 
-  stabilizedThis.sort((a, b) => {
-    const order = comparator(a[0], b[0]);
-    if (order !== 0) return order;
-    return a[1] - b[1];
-  });
+        <Box sx={{ display: "grid", gap: 1, gridTemplateColumns: "1fr 1fr" }}>
+          <AmountInfo label="Tagihan" value={fCurrency(row.nominal_tagihan)} />
+          <AmountInfo label="Dibayar" value={fCurrency(row.nominal_dibayar)} />
+          <AmountInfo label="Sisa" value={fCurrency(row.sisa_tagihan)} />
+          <AmountInfo label="Jatuh Tempo" value={row.tanggal_jatuh_tempo ? fDate(row.tanggal_jatuh_tempo) : "-"} />
+        </Box>
+      </Stack>
+    </Box>
+  );
+}
 
-  inputData = stabilizedThis.map((el) => el[0]);
+function StudentCell({ row }: { row: BillDataRow }) {
+  const name = row.siswa?.nama_lengkap ?? "-";
+  const nis = row.siswa?.nis ?? "-";
 
-  if (name) {
-    inputData = inputData.filter(({ invoiceNumber, invoiceTo }) =>
-      [
-        invoiceNumber,
-        invoiceTo.name,
-        invoiceTo.company,
-        invoiceTo.phoneNumber,
-      ].some((field) => field?.toLowerCase().includes(name.toLowerCase())),
-    );
-  }
+  return (
+    <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", minWidth: 0 }}>
+      <Avatar alt={name} sx={{ width: 40, height: 40, flexShrink: 0 }}>
+        {name.charAt(0).toUpperCase()}
+      </Avatar>
+      <Box sx={{ minWidth: 0 }}>
+        <Typography variant="body2" noWrap>{name}</Typography>
+        <Typography variant="caption" sx={{ color: "text.secondary" }} noWrap>{nis}</Typography>
+      </Box>
+    </Stack>
+  );
+}
 
-  if (status !== "all") {
-    inputData = inputData.filter((invoice) => invoice.status === status);
-  }
+function BillActions({ row }: { row: BillDataRow }) {
+  return (
+    <IconButton
+      onClick={() => undefined}
+      aria-label={`Aksi tagihan ${row.siswa?.nama_lengkap ?? row.id}`}
+    >
+      <Iconify icon="eva:more-vertical-fill" />
+    </IconButton>
+  );
+}
 
-  if (service.length) {
-    inputData = inputData.filter((invoice) =>
-      invoice.items.some((filterItem) => service.includes(filterItem.service)),
-    );
-  }
-
-  if (!dateError) {
-    if (startDate && endDate) {
-      inputData = inputData.filter((invoice) =>
-        fIsBetween(invoice.createDate, startDate, endDate),
-      );
-    }
-  }
-
-  return inputData;
+function AmountInfo({ label, value }: { label: string; value: string }) {
+  return (
+    <Box sx={{ p: 1.25, borderRadius: 1.5, bgcolor: "background.neutral", minWidth: 0 }}>
+      <Typography variant="caption" sx={{ color: "text.secondary" }}>{label}</Typography>
+      <Typography variant="body2" sx={{ fontWeight: 600, wordBreak: "break-word" }}>{value}</Typography>
+    </Box>
+  );
 }

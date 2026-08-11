@@ -13,6 +13,7 @@ import { FeeWaiverView } from "./sections/master-data/view";
 import { HistoryistView } from "./sections/transaction/view";
 import PaymentCounterPage from "./pages/transaction/payment-counter";
 import { InvoiceListView } from "./sections/bills-management/view/invoice-list-view";
+import FinancialReportPage from "./pages/reports/financial-reports";
 
 // ----------------------------------------------------------------------
 
@@ -53,6 +54,10 @@ const router = createBrowserRouter([
           {
             path: "bills-management/bills-data",
             element: <InvoiceListView />,
+          },
+          {
+            path: "reports/financial-reports",
+            element: <FinancialReportPage />,
           },
         ],
       },

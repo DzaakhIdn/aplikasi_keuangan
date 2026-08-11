@@ -94,7 +94,7 @@ export type Database = {
           nominal_dibayar: number;
           sisa_tagihan: number;
           tanggal_jatuh_tempo: string | null;
-          status: "belum_lunas" | "sebagian" | "lunas" | "dibebaskan" | "dibatalkan";
+          status: "pending" | "belum_lunas" | "sebagian" | "lunas" | "dibebaskan" | "dibatalkan";
           keterangan: string | null;
           created_at: string;
           updated_at: string;
@@ -112,7 +112,7 @@ export type Database = {
           nominal_dibayar?: number;
           sisa_tagihan: number;
           tanggal_jatuh_tempo?: string | null;
-          status?: "belum_lunas" | "sebagian" | "lunas" | "dibebaskan" | "dibatalkan";
+          status?: "pending" | "belum_lunas" | "sebagian" | "lunas" | "dibebaskan" | "dibatalkan";
           keterangan?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -130,7 +130,7 @@ export type Database = {
           nominal_dibayar?: number;
           sisa_tagihan?: number;
           tanggal_jatuh_tempo?: string | null;
-          status?: "belum_lunas" | "sebagian" | "lunas" | "dibebaskan" | "dibatalkan";
+          status?: "pending" | "belum_lunas" | "sebagian" | "lunas" | "dibebaskan" | "dibatalkan";
           keterangan?: string | null;
           created_at?: string;
           updated_at?: string;

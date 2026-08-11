@@ -182,7 +182,7 @@ export function HistoryistView() {
           )}
 
           <Box sx={{ position: "relative" }}>
-            <Scrollbar sx={{ minHeight: 444 }}>
+            <Scrollbar sx={{ width: 1, minHeight: 444 }}>
               <Table
                 size={table.dense ? "small" : "medium"}
                 sx={{ minWidth: 800 }}

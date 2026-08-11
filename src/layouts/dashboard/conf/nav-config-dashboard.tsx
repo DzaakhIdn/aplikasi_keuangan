@@ -88,7 +88,7 @@ export const navData = [
     items: [
       {
         title: "Laporan Keuangan",
-        path: "",
+        path: paths.financialReports,
         icon: ICONS.piechart,
       },
       {

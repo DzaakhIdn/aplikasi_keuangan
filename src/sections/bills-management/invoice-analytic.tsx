@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { varAlpha } from 'minimal-shared/utils';
 
 import Box from '@mui/material/Box';

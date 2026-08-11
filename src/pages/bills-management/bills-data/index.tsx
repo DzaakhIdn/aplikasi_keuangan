@@ -3,7 +3,7 @@ import { InvoiceListView } from "@/sections/bills-management/view/invoice-list-v
 
 // =====
 
-const metadata = { title: `History Pembayaran - ${CONFIG.appName}` };
+const metadata = { title: `Data Tagihan - ${CONFIG.appName}` };
 
 export default function Page() {
   return (

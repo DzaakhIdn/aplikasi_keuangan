@@ -40,7 +40,7 @@ export function RecentTransitions({
     <Card sx={sx} {...other}>
       <CardHeader title={title} subheader={subheader} sx={{ mb: 3 }} />
 
-      <Scrollbar sx={{ maxHeight: 462 }}>
+      <Scrollbar sx={{ width: 1, maxHeight: 462 }}>
         <Table sx={{ minWidth: 720 }}>
           <TableHeadCustom headCells={headCells} />
 
