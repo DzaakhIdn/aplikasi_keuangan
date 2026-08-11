@@ -5,7 +5,7 @@ import { Iconify } from "../iconify";
 
 // ----------------------------------------------------------------------
 
-export const chipProps = { size: "small" as const, variant: "soft" as const };
+export const chipProps = { size: "small" as const };
 
 interface FiltersResultProps {
   sx?: any;

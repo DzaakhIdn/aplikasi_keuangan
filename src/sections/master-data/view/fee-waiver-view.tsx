@@ -65,7 +65,7 @@ export type WaiverUpdate =
 const createWaiverSchema = z.object({
   id_siswa: z.string().min(1, "Siswa wajib dipilih"),
   id_jenis_pembayaran: z.string().min(1, "Jenis pembayaran wajib dipilih"),
-  potongan: z.number().min(0).max(100, "Potongan maksimal 100%"),
+  potongan: z.number().min(0, "Potongan tidak boleh negatif"),
   keterangan: z.string().optional(),
 });
 
@@ -177,7 +177,6 @@ export function FeeWaiverView() {
           <PaymentTableToolbar
             filters={filters}
             onResetPage={table.onResetPage}
-            options={{ services: [] }}
           />
 
           {canReset && (
@@ -337,7 +336,7 @@ export function FeeWaiverView() {
                   >
                     {paymentMethodList.map((pm) => (
                       <MenuItem key={pm.id} value={pm.id}>
-                        {pm.nama_pembayaran} —{" "}
+                        {pm.kode_jenis_pembayaran} — {pm.nama_pembayaran} —{" "}
                         {new Intl.NumberFormat("id-ID", {
                           style: "currency",
                           currency: "IDR",
@@ -360,17 +359,16 @@ export function FeeWaiverView() {
                     fullWidth
                     type="number"
                     value={field.value || ""}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      field.onChange(isNaN(val) ? 0 : Math.min(val, 100));
-                    }}
+                    onChange={(e) =>
+                      field.onChange(parseInt(e.target.value, 10) || 0)
+                    }
                     slotProps={{
                       input: {
                         endAdornment: (
-                          <InputAdornment position="end">%</InputAdornment>
+                          <InputAdornment position="end">Rp</InputAdornment>
                         ),
                       },
-                      htmlInput: { min: 0, max: 100, step: 1 },
+                      htmlInput: { min: 0, step: 1000 },
                     }}
                     error={!!form.formState.errors.potongan}
                     helperText={form.formState.errors.potongan?.message}
@@ -439,7 +437,6 @@ export function FeeWaiverView() {
 function applyFilter({
   inputData,
   comparator,
-  filters,
 }: {
   inputData: WaiverType[];
   comparator: (a: WaiverType, b: WaiverType) => number;

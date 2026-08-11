@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { styled, type SxProps, type Theme } from "@mui/material/styles";
 
 import { scrollbarClasses } from "./classes";
+import "./styles.css";
 
 // ----------------------------------------------------------------------
 
@@ -33,7 +34,7 @@ export function Scrollbar({
   children,
   className,
   slotProps,
-  fillContent = true,
+  fillContent = false,
   ...other
 }: ScrollbarProps) {
   return (
@@ -68,10 +69,29 @@ const ScrollbarRoot = styled(SimpleBar, {
 })<ScrollbarRootProps>(({ fillContent }) => ({
   minWidth: 0,
   minHeight: 0,
-  flexGrow: 1,
-  display: "flex",
-  flexDirection: "column",
+  ...(fillContent
+    ? {
+        flexGrow: 1,
+        display: "flex",
+        flexDirection: "column",
+      }
+    : {
+        display: "block",
+      }),
   ...(fillContent && {
+    "& .simplebar-wrapper": {
+      flex: "1 1 auto",
+      minHeight: 0,
+    },
+    "& .simplebar-mask": {
+      minHeight: 0,
+    },
+    "& .simplebar-offset": {
+      minHeight: 0,
+    },
+    "& .simplebar-content-wrapper": {
+      minHeight: 0,
+    },
     "& .simplebar-content": {
       display: "flex",
       flex: "1 1 auto",

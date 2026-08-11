@@ -57,7 +57,7 @@ export function HeaderSection({
 
   return (
     <HeaderRoot
-      position="sticky"
+      position="fixed"
       color="transparent"
       isOffset={isOffset}
       disableOffset={disableOffset}

@@ -7,7 +7,7 @@ export const TahunAjaranRepository = {
   async getAll() {
     const { data, error } = await supabase
       .from("tahun_ajaran")
-      .select("id, tahun_ajaran, status")
+      .select("id, tahun_ajaran, status, tanggal_mulai, tanggal_selesai")
       .order("id", { ascending: false });
 
     if (error) throw error;

@@ -1,4 +1,4 @@
-const DEFAULT_LOCALE = { code: 'en-US', currency: 'USD' } as const;
+const DEFAULT_LOCALE = { code: 'id-ID', currency: 'IDR' } as const;
 
 type NumericInput = number | string | null | undefined;
 

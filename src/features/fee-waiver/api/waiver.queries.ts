@@ -10,10 +10,9 @@ export const waiverQueries = {
       queryFn: () => WaiverRepository.getAll(),
     }),
 
-  detail: (id: string) => {
+  detail: (id: string) =>
     queryOptions({
       queryKey: feeWaiverKeys.detail(id),
       queryFn: () => WaiverRepository.getById(id),
-    });
-  },
+    }),
 };

@@ -30,10 +30,19 @@ import type { PaymentMethod, PaymentUpdate } from "../view/payment-method-view";
 // ----------------------------------------------------------------------
 
 const updatePaymentSchema = z.object({
+  kode_jenis_pembayaran: z
+    .string()
+    .min(1, "Kode pembayaran wajib diisi")
+    .regex(/^[A-Z0-9_-]+$/, "Kode hanya boleh A-Z, 0-9, underscore, atau strip"),
   nama_pembayaran: z.string().min(1, "Nama pembayaran wajib diisi"),
   id_tahun_ajaran: z.string().min(1, "Tahun ajaran wajib dipilih"),
   tipe_pembayaran: z.enum(["Bulanan", "Sekali"]),
   nominal: z.number().min(0, "Nominal tidak boleh negatif"),
+  tanggal_jatuh_tempo: z
+    .number()
+    .min(1, "Tanggal minimal 1")
+    .max(28, "Tanggal maksimal 28")
+    .nullable(),
   status: z.boolean(),
 });
 
@@ -61,10 +70,12 @@ export function PaymentMethodTableRow({
     resolver: zodResolver(updatePaymentSchema),
     mode: "onChange",
     defaultValues: {
+      kode_jenis_pembayaran: "",
       nama_pembayaran: "",
       id_tahun_ajaran: "",
       tipe_pembayaran: "Bulanan" as const,
       nominal: 0,
+      tanggal_jatuh_tempo: null,
       status: true,
     },
   });
@@ -72,10 +83,12 @@ export function PaymentMethodTableRow({
   useEffect(() => {
     if (openDialog.value && row) {
       form.reset({
+        kode_jenis_pembayaran: row.kode_jenis_pembayaran,
         nama_pembayaran: row.nama_pembayaran,
         id_tahun_ajaran: row.id_tahun_ajaran,
         tipe_pembayaran: row.tipe_pembayaran,
         nominal: row.nominal,
+        tanggal_jatuh_tempo: row.tanggal_jatuh_tempo,
         status: row.status,
       });
     }
@@ -114,6 +127,10 @@ export function PaymentMethodTableRow({
           />
         </TableCell>
 
+        <TableCell sx={{ typography: "body2", fontWeight: 600 }}>
+          {row.kode_jenis_pembayaran}
+        </TableCell>
+
         <TableCell sx={{ typography: "body2" }}>
           {row.nama_pembayaran}
         </TableCell>
@@ -131,6 +148,10 @@ export function PaymentMethodTableRow({
 
         <TableCell sx={{ typography: "body2" }}>
           {formatCurrency(row.nominal)}
+        </TableCell>
+
+        <TableCell sx={{ typography: "body2" }}>
+          {row.tanggal_jatuh_tempo ? `Tanggal ${row.tanggal_jatuh_tempo}` : "-"}
         </TableCell>
 
         <TableCell>
@@ -178,6 +199,29 @@ export function PaymentMethodTableRow({
             >
               <FormField
                 control={form.control}
+                name="kode_jenis_pembayaran"
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Kode Pembayaran"
+                    variant="outlined"
+                    margin="dense"
+                    fullWidth
+                    autoFocus
+                    value={field.value}
+                    onChange={(e) =>
+                      field.onChange(e.target.value.toUpperCase().replace(/\s+/g, "-"))
+                    }
+                    error={!!form.formState.errors.kode_jenis_pembayaran}
+                    helperText={
+                      form.formState.errors.kode_jenis_pembayaran?.message ??
+                      "Contoh: SPP, DAFTAR-ULANG, SERAGAM"
+                    }
+                  />
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="nama_pembayaran"
                 render={({ field }) => (
                   <TextField
@@ -186,7 +230,6 @@ export function PaymentMethodTableRow({
                     variant="outlined"
                     margin="dense"
                     fullWidth
-                    autoFocus
                     error={!!form.formState.errors.nama_pembayaran}
                     helperText={form.formState.errors.nama_pembayaran?.message}
                   />
@@ -255,6 +298,30 @@ export function PaymentMethodTableRow({
               />
               <FormField
                 control={form.control}
+                name="tanggal_jatuh_tempo"
+                render={({ field }) => (
+                  <TextField
+                    label="Tanggal Jatuh Tempo"
+                    variant="outlined"
+                    margin="dense"
+                    fullWidth
+                    type="number"
+                    value={field.value ?? ""}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value, 10);
+                      field.onChange(Number.isNaN(value) ? null : value);
+                    }}
+                    error={!!form.formState.errors.tanggal_jatuh_tempo}
+                    helperText={
+                      form.formState.errors.tanggal_jatuh_tempo?.message ??
+                      "Isi 1-28. Kosongkan jika tidak ada jatuh tempo."
+                    }
+                    slotProps={{ htmlInput: { min: 1, max: 28 } }}
+                  />
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="status"
                 render={({ field }) => (
                   <FormControlLabel
@@ -293,7 +360,14 @@ export function PaymentMethodTableRow({
         title="Hapus Pembayaran"
         content={`Yakin ingin menghapus "${row.nama_pembayaran}"?`}
         action={
-          <Button variant="contained" color="error" onClick={onDeleteRow}>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => {
+              onDeleteRow();
+              confirmDialog.onFalse();
+            }}
+          >
             Hapus
           </Button>
         }

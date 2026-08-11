@@ -160,7 +160,9 @@ const NavRoot = styled("div", {
 })<NavRootProps>(({ isNavMini, layoutQuery = "md", theme }) => ({
   top: 0,
   left: 0,
+  bottom: 0,
   height: "100vh",
+  flexShrink: 0,
   display: "none",
   position: "fixed",
   flexDirection: "column",

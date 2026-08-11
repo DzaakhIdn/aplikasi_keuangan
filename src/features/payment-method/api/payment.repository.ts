@@ -1,7 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
 
-type Payment = Database["public"]["Tables"]["jenis_pembayaran_keuangan"]["Row"];
 type PaymentInsert =
   Database["public"]["Tables"]["jenis_pembayaran_keuangan"]["Insert"];
 type PaymentUpdate =
@@ -14,11 +13,15 @@ export const PaymentRepository = {
       .select(
         `
         id,
+        kode_jenis_pembayaran,
         nama_pembayaran,
         id_tahun_ajaran,
         tipe_pembayaran,
         nominal,
-        status
+        tanggal_jatuh_tempo,
+        status,
+        created_at,
+        updated_at
         `,
       )
       .order("created_at", { ascending: false });
@@ -30,7 +33,7 @@ export const PaymentRepository = {
     const { data, error } = await supabase
       .from("jenis_pembayaran_keuangan")
       .select("*")
-      .eq("", id)
+      .eq("id", id)
       .single();
 
     if (error) throw error;
@@ -61,10 +64,12 @@ export const PaymentRepository = {
   },
 
   async remove(id: string) {
+    // Jenis pembayaran bisa sudah dipakai tagihan/transaksi, jadi jangan hard delete.
     const { error } = await supabase
       .from("jenis_pembayaran_keuangan")
-      .delete()
+      .update({ status: false })
       .eq("id", id);
+
     if (error) throw error;
   },
 };

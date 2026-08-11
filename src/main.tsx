@@ -10,6 +10,9 @@ import { DashboardLayout } from "./layouts/dashboard";
 import OverviewAppPage from "./pages";
 import PaymentMethodPage from "./pages/master-data/payment-method";
 import { FeeWaiverView } from "./sections/master-data/view";
+import { HistoryistView } from "./sections/transaction/view";
+import PaymentCounterPage from "./pages/transaction/payment-counter";
+import { InvoiceListView } from "./sections/bills-management/view/invoice-list-view";
 
 // ----------------------------------------------------------------------
 
@@ -38,6 +41,18 @@ const router = createBrowserRouter([
           {
             path: "master-data/fee-waiver",
             element: <FeeWaiverView />,
+          },
+          {
+            path: "transaction/payment-counter",
+            element: <PaymentCounterPage />,
+          },
+          {
+            path: "transaction/payment-history",
+            element: <HistoryistView />,
+          },
+          {
+            path: "bills-management/bills-data",
+            element: <InvoiceListView />,
           },
         ],
       },

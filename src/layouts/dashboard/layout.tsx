@@ -210,6 +210,29 @@ export function DashboardLayout({
 
   const rootSx: SxProps<Theme> = [
     {
+      [`& .${layoutClasses.header}`]: {
+        left: 0,
+        right: 0,
+        width: "100%",
+        [theme.breakpoints.up(layoutQuery)]: {
+          left: isNavMini
+            ? "var(--layout-nav-mini-width)"
+            : "var(--layout-nav-vertical-width)",
+          width: isNavMini
+            ? "calc(100% - var(--layout-nav-mini-width))"
+            : "calc(100% - var(--layout-nav-vertical-width))",
+          transition: theme.transitions.create(["left", "width"], {
+            easing: "var(--layout-transition-easing)",
+            duration: "var(--layout-transition-duration)",
+          }),
+        },
+      },
+      [`& .${layoutClasses.main}`]: {
+        pt: "var(--layout-header-mobile-height)",
+        [theme.breakpoints.up(layoutQuery)]: {
+          pt: "var(--layout-header-desktop-height)",
+        },
+      },
       [`& .${layoutClasses.sidebarContainer}`]: {
         minWidth: 0,
         width: "100%",

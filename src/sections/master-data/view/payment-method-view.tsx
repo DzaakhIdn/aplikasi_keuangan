@@ -27,7 +27,6 @@ import { CustomBreadcrumbs } from "@/components/custom-breadcrumbs";
 import { DashboardContent } from "@/layouts/dashboard";
 import { Form, FormField } from "@/components/ui/form";
 import { paymentQueries } from "@/features/payment-method/api/payments.queries";
-import { PaymentRepository } from "@/features/payment-method/api/payment.repository";
 import { tahunAjaranQueries } from "@/features/tahun-ajaran/api/tahun-ajaran.queries";
 import type { Database } from "@/lib/database.types";
 
@@ -61,17 +60,28 @@ export type PaymentUpdate =
   Database["public"]["Tables"]["jenis_pembayaran_keuangan"]["Update"];
 
 const createPaymentSchema = z.object({
+  kode_jenis_pembayaran: z
+    .string()
+    .min(1, "Kode pembayaran wajib diisi")
+    .regex(/^[A-Z0-9_-]+$/, "Kode hanya boleh A-Z, 0-9, underscore, atau strip"),
   nama_pembayaran: z.string().min(1, "Nama Pembayaran wajib diisi"),
   id_tahun_ajaran: z.string().min(1, "Tahun ajaran wajib dipilih"),
   tipe_pembayaran: z.enum(["Bulanan", "Sekali"]),
   nominal: z.number().min(0, "Nominal tidak boleh negatif"),
+  tanggal_jatuh_tempo: z
+    .number()
+    .min(1, "Tanggal minimal 1")
+    .max(28, "Tanggal maksimal 28")
+    .nullable(),
 });
 
 const TABLE_HEAD = [
+  { id: "kode_jenis_pembayaran", label: "KODE", width: 120 },
   { id: "nama_pembayaran", label: "NAMA PEMBAYARAN", width: 200 },
   { id: "id_tahun_ajaran", label: "TAHUN AJARAN", width: 120 },
   { id: "tipe_pembayaran", label: "TIPE", width: 120 },
   { id: "nominal", label: "NOMINAL", width: 120 },
+  { id: "tanggal_jatuh_tempo", label: "JATUH TEMPO", width: 120 },
   { id: "status", label: "STATUS", width: 100 },
   { id: "actions", label: "", width: 80 },
 ];
@@ -93,10 +103,12 @@ export function PaymentMethodView() {
   // Close dialog & reset form setelah create berhasil
   const handleAddData = (data: z.infer<typeof createPaymentSchema>) => {
     const payload: PaymentInsert = {
+      kode_jenis_pembayaran: data.kode_jenis_pembayaran,
       nama_pembayaran: data.nama_pembayaran,
       id_tahun_ajaran: data.id_tahun_ajaran,
       tipe_pembayaran: data.tipe_pembayaran,
       nominal: data.nominal,
+      tanggal_jatuh_tempo: data.tanggal_jatuh_tempo,
       status: true,
     };
     createPaymentMethod.mutate(payload, {
@@ -130,10 +142,12 @@ export function PaymentMethodView() {
   const form = useForm<z.infer<typeof createPaymentSchema>>({
     resolver: zodResolver(createPaymentSchema),
     defaultValues: {
+      kode_jenis_pembayaran: "",
       nama_pembayaran: "",
       id_tahun_ajaran: "",
       tipe_pembayaran: "Bulanan",
       nominal: 0,
+      tanggal_jatuh_tempo: null,
     },
   });
 
@@ -142,10 +156,19 @@ export function PaymentMethodView() {
     (!dataFiltered.length && canReset) || (!isLoading && !dataFiltered.length);
 
   const handleDeleteRow = (id: string) =>
-    deletePaymentMethod.mutate(String(id));
+    deletePaymentMethod.mutate(String(id), {
+      onSuccess: () => toast.success("Jenis pembayaran berhasil dinonaktifkan"),
+      onError: (error: Error) => toast.error(error.message),
+    });
 
   const handleDeleteRows = () => {
-    table.selected.forEach((id) => deletePaymentMethod.mutate(id));
+    table.selected.forEach((id) => {
+      deletePaymentMethod.mutate(id, {
+        onError: (error: Error) => toast.error(error.message),
+      });
+    });
+    toast.success("Jenis pembayaran terpilih dinonaktifkan");
+    confirmDialog.onFalse();
   };
 
   return (
@@ -177,7 +200,6 @@ export function PaymentMethodView() {
           <PaymentTableToolbar
             filters={filters}
             onResetPage={table.onResetPage}
-            options={{ services: [] }}
           />
 
           {canReset && (
@@ -293,6 +315,29 @@ export function PaymentMethodView() {
             >
               <FormField
                 control={form.control}
+                name="kode_jenis_pembayaran"
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Kode Pembayaran"
+                    variant="outlined"
+                    margin="dense"
+                    fullWidth
+                    autoFocus
+                    value={field.value}
+                    onChange={(e) =>
+                      field.onChange(e.target.value.toUpperCase().replace(/\s+/g, "-"))
+                    }
+                    error={!!form.formState.errors.kode_jenis_pembayaran}
+                    helperText={
+                      form.formState.errors.kode_jenis_pembayaran?.message ??
+                      "Contoh: SPP, DAFTAR-ULANG, SERAGAM"
+                    }
+                  />
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="nama_pembayaran"
                 render={({ field }) => (
                   <TextField
@@ -301,7 +346,6 @@ export function PaymentMethodView() {
                     variant="outlined"
                     margin="dense"
                     fullWidth
-                    autoFocus
                     error={!!form.formState.errors.nama_pembayaran}
                     helperText={form.formState.errors.nama_pembayaran?.message}
                   />
@@ -365,6 +409,30 @@ export function PaymentMethodView() {
                     }
                     error={!!form.formState.errors.nominal}
                     helperText={form.formState.errors.nominal?.message}
+                  />
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="tanggal_jatuh_tempo"
+                render={({ field }) => (
+                  <TextField
+                    label="Tanggal Jatuh Tempo"
+                    variant="outlined"
+                    margin="dense"
+                    fullWidth
+                    type="number"
+                    value={field.value ?? ""}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value, 10);
+                      field.onChange(Number.isNaN(value) ? null : value);
+                    }}
+                    error={!!form.formState.errors.tanggal_jatuh_tempo}
+                    helperText={
+                      form.formState.errors.tanggal_jatuh_tempo?.message ??
+                      "Isi 1-28. Kosongkan jika tidak ada jatuh tempo."
+                    }
+                    slotProps={{ htmlInput: { min: 1, max: 28 } }}
                   />
                 )}
               />

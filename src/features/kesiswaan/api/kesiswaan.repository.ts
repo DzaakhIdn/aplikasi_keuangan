@@ -7,7 +7,7 @@ export const KesiswaanRepository = {
   async getAktif() {
     const { data, error } = await supabase
       .from("kesiswaan")
-      .select("id, nis, nama_lengkap, status")
+      .select("id, nis, nama_lengkap, status, tahun_ajaran_id, kelas_id, rombel_id")
       .eq("status", "aktif")
       .order("nama_lengkap", { ascending: true });
 

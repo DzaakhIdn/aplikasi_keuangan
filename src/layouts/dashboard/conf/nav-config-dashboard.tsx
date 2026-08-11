@@ -39,6 +39,21 @@ export const navData = [
     items: [{ title: "Overview", path: "/", icon: ICONS.dashboard }],
   },
   {
+    subheader: "KASIR & TRANSAKSI",
+    items: [
+      {
+        title: "Loket Pembayaran",
+        path: paths.paymentCounter,
+        icon: ICONS.wallet,
+      },
+      {
+        title: "Riwayat Transaksi",
+        path: paths.paymentHistory,
+        icon: ICONS.history,
+      },
+    ],
+  },
+  {
     subheader: "MASTER DATA",
     items: [
       {
@@ -54,21 +69,6 @@ export const navData = [
     ],
   },
   {
-    subheader: "KASIR & TRANSAKSI",
-    items: [
-      {
-        title: "Loket Pembayaran",
-        path: "",
-        icon: ICONS.wallet,
-      },
-      {
-        title: "Riwayat Transaksi",
-        path: "",
-        icon: ICONS.history,
-      },
-    ],
-  },
-  {
     subheader: "MANAJEMEN TAGIHAN",
     items: [
       {
@@ -78,7 +78,7 @@ export const navData = [
       },
       {
         title: "Data Tagihan",
-        path: "",
+        path: paths.billsData,
         icon: ICONS.bill,
       },
     ],

@@ -4,6 +4,7 @@ import type { SxProps, Theme } from "@mui/material/styles";
 
 import { labelClasses } from "./classes";
 import { LabelRoot, LabelIcon } from "./styles";
+import type { ReactNode } from "react";
 
 // ----------------------------------------------------------------------
 

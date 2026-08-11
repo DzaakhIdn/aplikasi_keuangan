@@ -1,5 +1,7 @@
 import type { PropsWithChildren } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 
 import { themeConfig, ThemeProvider } from "./theme";
 
@@ -22,11 +24,13 @@ export default function App({ children }: PropsWithChildren) {
           defaultMode={themeConfig.defaultMode}
         >
           <SettingsProvider defaultSettings={defaultSettings}>
-            <MotionLazy>
-              <Snackbar />
-              <ProgressBar />
-              {children}
-            </MotionLazy>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <MotionLazy>
+                <Snackbar />
+                <ProgressBar />
+                {children}
+              </MotionLazy>
+            </LocalizationProvider>
           </SettingsProvider>
         </ThemeProvider>
       </SupabaseAuthProvider>

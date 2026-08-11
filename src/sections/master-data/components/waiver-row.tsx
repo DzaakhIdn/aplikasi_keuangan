@@ -28,7 +28,7 @@ import type { WaiverType, WaiverUpdate } from "../view/fee-waiver-view";
 // ----------------------------------------------------------------------
 
 const updateWaiverSchema = z.object({
-  potongan: z.number().min(0).max(100, "Potongan maksimal 100%"),
+  potongan: z.number().min(0, "Potongan tidak boleh negatif"),
   keterangan: z.string().nullable().optional(),
 });
 
@@ -74,6 +74,7 @@ export function FeeWaiverTableRow({
   const siswaNis = (row as any).siswa?.nis ?? "";
   const jenisPembayaran =
     (row as any).biaya_detail?.nama_pembayaran ?? row.id_jenis_pembayaran;
+  const kodeJenisPembayaran = (row as any).biaya_detail?.kode_jenis_pembayaran;
   const nominalPembayaran: number | null =
     (row as any).biaya_detail?.nominal ?? null;
 
@@ -116,7 +117,7 @@ export function FeeWaiverTableRow({
             primary={jenisPembayaran}
             secondary={
               nominalPembayaran !== null
-                ? formatCurrency(nominalPembayaran)
+                ? `${kodeJenisPembayaran ? `${kodeJenisPembayaran} — ` : ""}${formatCurrency(nominalPembayaran)}`
                 : undefined
             }
             slotProps={{
@@ -128,7 +129,7 @@ export function FeeWaiverTableRow({
 
         <TableCell>
           <Label variant="soft" color="info">
-            Potongan {row.potongan}%
+            {formatCurrency(row.potongan)}
           </Label>
         </TableCell>
 
@@ -185,17 +186,16 @@ export function FeeWaiverTableRow({
                     fullWidth
                     type="number"
                     value={field.value || ""}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      field.onChange(isNaN(val) ? 0 : Math.min(val, 100));
-                    }}
+                    onChange={(e) =>
+                      field.onChange(parseInt(e.target.value, 10) || 0)
+                    }
                     slotProps={{
                       input: {
                         endAdornment: (
-                          <InputAdornment position="end">%</InputAdornment>
+                          <InputAdornment position="end">Rp</InputAdornment>
                         ),
                       },
-                      htmlInput: { min: 0, max: 100, step: 1 },
+                      htmlInput: { min: 0, step: 1000 },
                     }}
                     error={!!form.formState.errors.potongan}
                     helperText={form.formState.errors.potongan?.message}
