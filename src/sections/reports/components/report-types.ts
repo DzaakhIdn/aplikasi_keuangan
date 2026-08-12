@@ -28,4 +28,11 @@ export type PaymentBreakdown = {
 
 export type ClassBreakdown = PaymentBreakdown;
 
+export type ClassPaymentSummary = PaymentBreakdown & {
+  paidStudents: number;
+  unpaidStudents: number;
+  totalStudents: number;
+  percentage: number;
+};
+
 export type { BillDataRow, FinancialPaymentRow };

@@ -87,7 +87,14 @@ export const FinancialReportRepository = {
           status_pembayaran,
           metode_pembayaran,
           bukti_pembayaran_url,
-          siswa:kesiswaan(nis, nama_lengkap, kelas_id, rombel_id),
+          siswa:kesiswaan(
+            nis,
+            nama_lengkap,
+            kelas_id,
+            rombel_id,
+            kelas:kelas(nama_kelas),
+            rombel:rombel(rombel, kelas)
+          ),
           pembayaran_detail_keuangan(
             nominal_bayar,
             tagihan_siswa_keuangan(
@@ -103,7 +110,14 @@ export const FinancialReportRepository = {
         .select(
           `
           *,
-          siswa:kesiswaan(nis, nama_lengkap, kelas_id, rombel_id),
+          siswa:kesiswaan(
+            nis,
+            nama_lengkap,
+            kelas_id,
+            rombel_id,
+            kelas:kelas(nama_kelas),
+            rombel:rombel(rombel, kelas)
+          ),
           jenis_pembayaran_keuangan(kode_jenis_pembayaran, nama_pembayaran, tipe_pembayaran),
           tahun_ajaran(tahun_ajaran)
           `,

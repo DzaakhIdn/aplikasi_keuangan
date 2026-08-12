@@ -9,6 +9,13 @@ export type BillDataRow = Database["public"]["Tables"]["tagihan_siswa_keuangan"]
     nama_lengkap: string;
     kelas_id?: string | null;
     rombel_id?: string | null;
+    kelas?: {
+      nama_kelas: string;
+    } | null;
+    rombel?: {
+      rombel: string;
+      kelas: string;
+    } | null;
   } | null;
   jenis_pembayaran_keuangan?: {
     kode_jenis_pembayaran: string;
@@ -27,7 +34,14 @@ export const BillsDataRepository = {
       .select(
         `
         *,
-        siswa:kesiswaan(nis, nama_lengkap, kelas_id, rombel_id),
+        siswa:kesiswaan(
+          nis,
+          nama_lengkap,
+          kelas_id,
+          rombel_id,
+          kelas:kelas(nama_kelas),
+          rombel:rombel(rombel, kelas)
+        ),
         jenis_pembayaran_keuangan(kode_jenis_pembayaran, nama_pembayaran, tipe_pembayaran),
         tahun_ajaran(tahun_ajaran)
         `,

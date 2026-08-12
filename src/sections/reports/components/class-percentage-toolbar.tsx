@@ -12,11 +12,13 @@ type ReportFilterToolbarProps = {
   filters: ClassPercentageFilters;
   academicYears: string[];
   paymentTypes: string[];
+  classes: string[];
   onChange: (field: keyof ClassPercentageFilters, value: string) => void;
   onReset: () => void;
 };
 
 export function ClassPercentageToolbar({
+  classes,
   filters,
   academicYears,
   paymentTypes,
@@ -36,7 +38,7 @@ export function ClassPercentageToolbar({
           gridTemplateColumns: {
             xs: "1fr",
             sm: "1fr 1fr",
-            xl: "1fr 1fr 180px 180px auto",
+            xl: "1fr 1fr 1fr 600px",
           },
           alignItems: "center",
         }}
@@ -73,10 +75,10 @@ export function ClassPercentageToolbar({
           select
           label="Kelas"
           value={filters.class}
-          onChange={(event) => onChange("paymentType", event.target.value)}
+          onChange={(event) => onChange("class", event.target.value)}
         >
           <MenuItem value="all">Semua Kelas</MenuItem>
-          {paymentTypes.map((type) => (
+          {classes.map((type) => (
             <MenuItem key={type} value={type}>
               {type}
             </MenuItem>

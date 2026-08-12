@@ -9,7 +9,13 @@ import { Chart, useChart, ChartLegends } from "@/components/chart";
 
 // ----------------------------------------------------------------------
 
-export function PaymentSummary({ title, subheader, chart, sx, ...other }) {
+export function PaymentSummary({
+  title,
+  subheader,
+  chart,
+  sx = undefined,
+  ...other
+}) {
   const theme = useTheme();
 
   const chartColors = chart.colors ?? [
