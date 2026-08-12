@@ -8,6 +8,12 @@ export type FinancialReportFilters = {
   endDate: string;
 };
 
+export type ClassPercentageFilters = {
+  class: string;
+  paymentType: string;
+  academicYear: string
+};
+
 export type MonthlyIncome = {
   month: string;
   value: number;

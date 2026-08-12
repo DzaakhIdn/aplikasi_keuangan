@@ -14,6 +14,7 @@ import { HistoryistView } from "./sections/transaction/view";
 import PaymentCounterPage from "./pages/transaction/payment-counter";
 import { InvoiceListView } from "./sections/bills-management/view/invoice-list-view";
 import FinancialReportPage from "./pages/reports/financial-reports";
+import { ClassPercentageView } from "./sections/reports/view";
 
 // ----------------------------------------------------------------------
 
@@ -58,6 +59,10 @@ const router = createBrowserRouter([
           {
             path: "reports/financial-reports",
             element: <FinancialReportPage />,
+          },
+          {
+            path: "reports/class-percentage",
+            element: <ClassPercentageView />,
           },
         ],
       },

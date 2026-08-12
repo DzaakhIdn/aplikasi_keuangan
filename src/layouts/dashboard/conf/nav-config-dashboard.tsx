@@ -93,7 +93,7 @@ export const navData = [
       },
       {
         title: "Presentase Kelas",
-        path: "",
+        path: paths.classPercentage,
         icon: ICONS.barchart,
       },
       {
