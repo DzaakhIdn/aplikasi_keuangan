@@ -8,12 +8,21 @@ import { chipProps, FiltersBlock, FiltersResult } from '@/components/filters-res
 
 interface TrackTableFiltersResultProps {
   filters: any;
+  activeAcademicYearId: string;
+  academicYearLabel: string;
   totalResults: number;
   onResetPage: () => void;
   sx: any;
 }
 
-export function PaymentTableFiltersResult({ filters, totalResults, onResetPage, sx }: TrackTableFiltersResultProps) {
+export function PaymentTableFiltersResult({
+  filters,
+  activeAcademicYearId,
+  academicYearLabel,
+  totalResults,
+  onResetPage,
+  sx,
+}: TrackTableFiltersResultProps) {
   const { state: currentFilters, setState: updateFilters, resetState: resetFilters } = filters;
 
   const handleRemoveKeyword = useCallback(() => {
@@ -26,6 +35,11 @@ export function PaymentTableFiltersResult({ filters, totalResults, onResetPage, 
     updateFilters({ status: 'all' });
   }, [onResetPage, updateFilters]);
 
+  const handleRemoveAcademicYear = useCallback(() => {
+    onResetPage();
+    updateFilters({ academicYear: activeAcademicYearId });
+  }, [activeAcademicYearId, onResetPage, updateFilters]);
+
   return (
     <FiltersResult totalResults={totalResults} onReset={() => resetFilters()} sx={sx}>
       <FiltersBlock label="Status:" isShow={currentFilters.status !== 'all'}>
@@ -35,6 +49,13 @@ export function PaymentTableFiltersResult({ filters, totalResults, onResetPage, 
           onDelete={handleRemoveStatus}
           sx={{ textTransform: 'capitalize' }}
         />
+      </FiltersBlock>
+
+      <FiltersBlock
+        label="Tahun ajaran:"
+        isShow={currentFilters.academicYear !== activeAcademicYearId}
+      >
+        <Chip {...chipProps} label={academicYearLabel} onDelete={handleRemoveAcademicYear} />
       </FiltersBlock>
 
       <FiltersBlock label="Keyword:" isShow={!!currentFilters.name}>

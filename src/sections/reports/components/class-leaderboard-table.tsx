@@ -17,7 +17,7 @@ import { ReportSectionIcon } from "./report-section-icon";
 
 const TABLE_HEAD = [
   { id: "rank", label: "RANK", width: 80 },
-  { id: "class", label: "KELAS", width: 240 },
+  { id: "class", label: "ROMBEL", width: 240 },
   { id: "target", label: "TARGET TAGIHAN", width: 190 },
   { id: "paid", label: "TOTAL TERBAYAR", width: 190 },
   { id: "percentage", label: "PERSENTASE", width: 260 },
@@ -27,14 +27,33 @@ function percentageColor(percentage: number) {
   return `hsl(${Math.round(Math.min(Math.max(percentage, 0), 100) * 1.2)} 72% 42%)`;
 }
 
-export function ClassLeaderboardTable({ rows, loading }: { rows: ClassPaymentSummary[]; loading: boolean }) {
+export function ClassLeaderboardTable({
+  rows,
+  loading,
+}: {
+  rows: ClassPaymentSummary[];
+  loading: boolean;
+}) {
   return (
     <Card sx={{ minWidth: 0 }}>
-      <CardHeader
-        title="Leaderboard Pembayaran Kelas"
-        subheader="Peringkat berdasarkan persentase tagihan yang sudah terbayar"
-        avatar={<ReportSectionIcon icon="solar:cup-star-bold-duotone" color="warning.main" />}
-      />
+      <Stack
+        sx={{
+          m: 3,
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 2,
+        }}
+      >
+        <ReportSectionIcon
+          icon="solar:cup-star-bold-duotone"
+          color="warning.main"
+        />
+        <Box>
+          <Typography variant="h5">Leaderboard Pembayaran Per-Rombel</Typography>
+          <Typography variant="body1">Peringkat persentase pembayaran rombel</Typography>
+        </Box>
+      </Stack>
 
       <Scrollbar sx={{ width: 1 }}>
         <Table sx={{ minWidth: 900 }}>
@@ -55,26 +74,54 @@ export function ClassLeaderboardTable({ rows, loading }: { rows: ClassPaymentSum
                         borderRadius: "50%",
                         fontWeight: 700,
                         color: index < 3 ? "warning.darker" : "text.secondary",
-                        bgcolor: index < 3 ? "warning.lighter" : "background.neutral",
+                        bgcolor:
+                          index < 3 ? "warning.lighter" : "background.neutral",
                       }}
                     >
                       {index + 1}
                     </Box>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="subtitle2">{row.name}</Typography>
-                    <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                    <Typography variant="subtitle2">Kelas {row.name}</Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "text.secondary" }}
+                    >
                       {row.totalStudents} santri
                     </Typography>
                   </TableCell>
                   <TableCell>{fCurrency(row.total)}</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>{fCurrency(row.paid)}</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>
+                    {fCurrency(row.paid)}
+                  </TableCell>
                   <TableCell>
-                    <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-                      <Box sx={{ width: 140, height: 9, borderRadius: 999, bgcolor: "background.neutral", overflow: "hidden" }}>
-                        <Box sx={{ width: `${row.percentage}%`, height: 1, bgcolor: color, borderRadius: 999 }} />
+                    <Stack
+                      direction="row"
+                      spacing={1.5}
+                      sx={{ alignItems: "center" }}
+                    >
+                      <Box
+                        sx={{
+                          width: 140,
+                          height: 9,
+                          borderRadius: 999,
+                          bgcolor: "background.neutral",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: `${row.percentage}%`,
+                            height: 1,
+                            bgcolor: color,
+                            borderRadius: 999,
+                          }}
+                        />
                       </Box>
-                      <Typography variant="subtitle2" sx={{ minWidth: 52, color }}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ minWidth: 52, color }}
+                      >
                         {row.percentage.toFixed(1)}%
                       </Typography>
                     </Stack>

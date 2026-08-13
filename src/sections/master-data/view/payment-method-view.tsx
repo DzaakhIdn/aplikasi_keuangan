@@ -95,6 +95,7 @@ export function PaymentMethodView() {
 
   const { data: tableData = [], isLoading } = useQuery(paymentQueries.all());
   const { data: tahunAjaranList = [] } = useQuery(tahunAjaranQueries.all());
+  const activeAcademicYear = tahunAjaranList.find((item) => item.status === "aktif");
 
   const createPaymentMethod = useCreatePaymentMethod();
   const deletePaymentMethod = useDeletePaymentMethod();
@@ -121,22 +122,29 @@ export function PaymentMethodView() {
     });
   };
 
-  const filtersState = useSetState({ name: "", status: "all" });
+  const filtersState = useSetState({ name: "", status: "all", academicYear: "" });
   const {
     state: currentFilters,
     setState: updateFilters,
     resetState: resetFilters,
   } = filtersState;
   const filters = {
-    state: currentFilters,
+    state: {
+      ...currentFilters,
+      academicYear: currentFilters.academicYear || activeAcademicYear?.id || "all",
+    },
     setState: updateFilters,
-    resetState: resetFilters,
+    resetState: () => {
+      resetFilters();
+      updateFilters({ academicYear: activeAcademicYear?.id || "all" });
+    },
   };
+  const selectedAcademicYear = filters.state.academicYear;
 
   const dataFiltered = applyFilter({
     inputData: tableData as PaymentMethod[],
     comparator: getComparator(table.order, table.orderBy),
-    filters: currentFilters,
+    filters: { ...currentFilters, academicYear: selectedAcademicYear },
   });
 
   const form = useForm<z.infer<typeof createPaymentSchema>>({
@@ -151,7 +159,10 @@ export function PaymentMethodView() {
     },
   });
 
-  const canReset = !!currentFilters.name || currentFilters.status !== "all";
+  const canReset =
+    !!currentFilters.name ||
+    currentFilters.status !== "all" ||
+    selectedAcademicYear !== (activeAcademicYear?.id || "all");
   const notFound =
     (!dataFiltered.length && canReset) || (!isLoading && !dataFiltered.length);
 
@@ -186,7 +197,10 @@ export function PaymentMethodView() {
           ]}
           action={
             <Button
-              onClick={openDialog.onTrue}
+              onClick={() => {
+                form.setValue("id_tahun_ajaran", activeAcademicYear?.id || "");
+                openDialog.onTrue();
+              }}
               variant="contained"
               startIcon={<Iconify icon="mingcute:add-line" />}
             >
@@ -199,12 +213,18 @@ export function PaymentMethodView() {
         <Card sx={{ width: "100%", overflow: "hidden" }}>
           <PaymentTableToolbar
             filters={filters}
+            academicYears={tahunAjaranList}
             onResetPage={table.onResetPage}
           />
 
           {canReset && (
             <PaymentTableFiltersResult
               filters={filters}
+              activeAcademicYearId={activeAcademicYear?.id || "all"}
+              academicYearLabel={
+                tahunAjaranList.find((item) => item.id === selectedAcademicYear)?.tahun_ajaran ??
+                "Semua tahun ajaran"
+              }
               totalResults={dataFiltered.length}
               onResetPage={table.onResetPage}
               sx={{ p: 2.5, pt: 0 }}
@@ -487,9 +507,9 @@ function applyFilter({
 }: {
   inputData: PaymentMethod[];
   comparator: (a: PaymentMethod, b: PaymentMethod) => number;
-  filters: { name: string; status: string };
+  filters: { name: string; status: string; academicYear: string };
 }): PaymentMethod[] {
-  const { name, status } = filters;
+  const { name, status, academicYear } = filters;
 
   const stabilized: [PaymentMethod, number][] = inputData.map((el, i) => [
     el,
@@ -512,6 +532,10 @@ function applyFilter({
     result = result.filter((row) =>
       status === "aktif" ? row.status === true : row.status === false,
     );
+  }
+
+  if (academicYear !== "all") {
+    result = result.filter((row) => row.id_tahun_ajaran === academicYear);
   }
 
   return result;

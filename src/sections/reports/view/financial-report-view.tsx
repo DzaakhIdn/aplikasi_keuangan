@@ -14,7 +14,6 @@ import { ClassRecapTable } from "../components/class-recap-table";
 import { ReportSummaryCard } from "../components/report-summary-card";
 import { ArrearsReportTable } from "../components/arrears-report-table";
 import { ReportFilterToolbar } from "../components/report-filter-toolbar";
-import { PaymentBreakdownCard } from "../components/payment-breakdown-card";
 import { TransactionReportTable } from "../components/transaction-report-table";
 import type {
   BillDataRow,

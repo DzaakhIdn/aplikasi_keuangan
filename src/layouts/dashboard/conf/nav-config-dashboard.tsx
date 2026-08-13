@@ -92,13 +92,13 @@ export const navData = [
         icon: ICONS.piechart,
       },
       {
-        title: "Presentase Kelas",
+        title: "Persentase Kelas",
         path: paths.classPercentage,
         icon: ICONS.barchart,
       },
       {
         title: "Tunggakan Siswa",
-        path: "",
+        path: paths.studentArrears,
         icon: ICONS.registant,
       },
       {

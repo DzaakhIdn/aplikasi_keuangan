@@ -9,12 +9,13 @@ import { AuthenticatedHome } from "./auth/authenticated-home";
 import { DashboardLayout } from "./layouts/dashboard";
 import OverviewAppPage from "./pages";
 import PaymentMethodPage from "./pages/master-data/payment-method";
-import { FeeWaiverView } from "./sections/master-data/view";
-import { HistoryistView } from "./sections/transaction/view";
+import FeeWaiverPage from "./pages/master-data/fee-waiver";
+import PaymentHistoryPage from "./pages/transaction/payment-history";
 import PaymentCounterPage from "./pages/transaction/payment-counter";
-import { InvoiceListView } from "./sections/bills-management/view/invoice-list-view";
+import BillsDataPage from "./pages/bills-management/bills-data";
 import FinancialReportPage from "./pages/reports/financial-reports";
-import { ClassPercentageView } from "./sections/reports/view";
+import ClassPercentagePage from "./pages/reports/class-percentage";
+import StudentArrearsPage from "./pages/reports/student-arrears";
 
 // ----------------------------------------------------------------------
 
@@ -42,7 +43,7 @@ const router = createBrowserRouter([
           },
           {
             path: "master-data/fee-waiver",
-            element: <FeeWaiverView />,
+            element: <FeeWaiverPage />,
           },
           {
             path: "transaction/payment-counter",
@@ -50,11 +51,11 @@ const router = createBrowserRouter([
           },
           {
             path: "transaction/payment-history",
-            element: <HistoryistView />,
+            element: <PaymentHistoryPage />,
           },
           {
             path: "bills-management/bills-data",
-            element: <InvoiceListView />,
+            element: <BillsDataPage />,
           },
           {
             path: "reports/financial-reports",
@@ -62,7 +63,11 @@ const router = createBrowserRouter([
           },
           {
             path: "reports/class-percentage",
-            element: <ClassPercentageView />,
+            element: <ClassPercentagePage />,
+          },
+          {
+            path: "reports/student-arrears",
+            element: <StudentArrearsPage />,
           },
         ],
       },

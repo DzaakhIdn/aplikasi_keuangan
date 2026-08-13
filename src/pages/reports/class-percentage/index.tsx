@@ -3,9 +3,9 @@ import { ClassPercentageView } from "@/sections/reports/view";
 
 // ==========================\
 
-const metadata = { title: `Dashboard - ${CONFIG.appName}` };
+const metadata = { title: `Persentase Rombel - ${CONFIG.appName}` };
 
-export default function OverviewAppPage() {
+export default function Page() {
   return (
     <>
       <title>{metadata.title}</title>

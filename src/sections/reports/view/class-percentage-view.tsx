@@ -29,15 +29,15 @@ function uniqueStrings(values: (string | null | undefined)[]) {
   return [...new Set(values.filter((value): value is string => !!value))].sort();
 }
 
-function getClassName(row: BillDataRow) {
-  return row.siswa?.kelas?.nama_kelas ?? row.siswa?.rombel?.kelas ?? "Tanpa kelas";
+function getRombelName(row: BillDataRow) {
+  return row.siswa?.rombel?.rombel ?? "Tanpa rombel";
 }
 
 function buildClassSummary(rows: BillDataRow[]): ClassPaymentSummary[] {
   const groups = rows.reduce<
     Record<string, { total: number; paid: number; remaining: number; students: Record<string, number> }>
   >((result, row) => {
-    const name = getClassName(row);
+    const name = getRombelName(row);
     result[name] ??= { total: 0, paid: 0, remaining: 0, students: {} };
     result[name].total += row.nominal_tagihan;
     result[name].paid += row.nominal_dibayar;
@@ -75,7 +75,7 @@ export function ClassPercentageView() {
   const paymentTypes = uniqueStrings(
     bills.map((row) => row.jenis_pembayaran_keuangan?.nama_pembayaran),
   );
-  const classes = uniqueStrings(bills.map(getClassName));
+  const classes = uniqueStrings(bills.map(getRombelName));
 
   const filteredBills = useMemo(
     () =>
@@ -90,7 +90,7 @@ export function ClassPercentageView() {
           row.jenis_pembayaran_keuangan?.nama_pembayaran !== filters.paymentType
         )
           return false;
-        if (filters.class !== "all" && getClassName(row) !== filters.class) return false;
+        if (filters.class !== "all" && getRombelName(row) !== filters.class) return false;
         return true;
       }),
     [bills, filters],

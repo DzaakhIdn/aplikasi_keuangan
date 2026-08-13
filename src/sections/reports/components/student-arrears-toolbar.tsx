@@ -6,20 +6,22 @@ import TextField from "@mui/material/TextField";
 
 import { Iconify } from "@/components/iconify";
 
-import type { ClassPercentageFilters } from "./report-types";
+import type { StudentArrearsFilters } from "./report-types";
 
 type ReportFilterToolbarProps = {
-  filters: ClassPercentageFilters;
+  filters: StudentArrearsFilters;
   academicYears: string[];
   paymentTypes: string[];
   classes: string[];
-  onChange: (field: keyof ClassPercentageFilters, value: string) => void;
+  months: string[];
+  onChange: (field: keyof StudentArrearsFilters, value: string) => void;
   onReset: () => void;
 };
 
-export function ClassPercentageToolbar({
+export function StudentArrearsToolbar({
   classes,
   filters,
+  months,
   academicYears,
   paymentTypes,
   onChange,
@@ -38,7 +40,7 @@ export function ClassPercentageToolbar({
           gridTemplateColumns: {
             xs: "1fr",
             sm: "1fr 1fr",
-            xl: "1fr 1fr 1fr 600px",
+            xl: "200px 300px 150px 300px 200px",
           },
           alignItems: "center",
         }}
@@ -79,6 +81,20 @@ export function ClassPercentageToolbar({
         >
           <MenuItem value="all">Semua Rombel</MenuItem>
           {classes.map((type) => (
+            <MenuItem key={type} value={type}>
+              {type}
+            </MenuItem>
+          ))}
+        </TextField>
+
+        <TextField
+          select
+          label="Bulan"
+          value={filters.months}
+          onChange={(event) => onChange("months", event.target.value)}
+        >
+          <MenuItem value="all">Semua Bulan</MenuItem>
+          {months.map((type) => (
             <MenuItem key={type} value={type}>
               {type}
             </MenuItem>

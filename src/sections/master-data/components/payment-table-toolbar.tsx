@@ -1,6 +1,7 @@
-import { useCallback } from "react";
+import { useCallback, type ChangeEvent } from "react";
 
 import Box from "@mui/material/Box";
+import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import InputAdornment from "@mui/material/InputAdornment";
 
@@ -10,11 +11,13 @@ import { Iconify } from "@/components/iconify";
 
 interface TrackTableToolbarProps {
   filters: any;
+  academicYears?: { id: string; tahun_ajaran: string }[];
   onResetPage: () => void;
 }
 
 export function PaymentTableToolbar({
   filters,
+  academicYears,
   onResetPage,
 }: TrackTableToolbarProps) {
 
@@ -24,6 +27,14 @@ export function PaymentTableToolbar({
     (event: any) => {
       onResetPage();
       updateFilters({ name: event.target.value });
+    },
+    [onResetPage, updateFilters]
+  );
+
+  const handleFilterAcademicYear = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      onResetPage();
+      updateFilters({ academicYear: event.target.value });
     },
     [onResetPage, updateFilters]
   );
@@ -49,6 +60,23 @@ export function PaymentTableToolbar({
             alignItems: "center",
           }}
         >
+          {academicYears && (
+            <TextField
+              select
+              label="Tahun Ajaran"
+              value={currentFilters.academicYear ?? "all"}
+              onChange={handleFilterAcademicYear}
+              sx={{ minWidth: { xs: 1, md: 220 } }}
+            >
+              <MenuItem value="all">Semua tahun ajaran</MenuItem>
+              {academicYears.map((year) => (
+                <MenuItem key={year.id} value={year.id}>
+                  {year.tahun_ajaran}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
+
           <TextField
             fullWidth
             value={currentFilters.name}

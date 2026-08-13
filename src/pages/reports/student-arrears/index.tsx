@@ -1,15 +1,15 @@
 import { CONFIG } from '@/global-config';
-import { OverviewView } from '@/sections/overview/view';
+import { StudentArrearsView } from '@/sections/reports/view';
 
 // ==========================\
 
-const metadata = { title: `Dashboard - ${CONFIG.appName}` };
+const metadata = { title: `Tunggakan Siswa - ${CONFIG.appName}` };
 
 export default function Page() {
   return (
     <>
       <title>{metadata.title}</title>
-      <OverviewView />
+      <StudentArrearsView />
     </>
   );
 }
