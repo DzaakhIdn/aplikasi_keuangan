@@ -77,9 +77,9 @@ export function OverviewView() {
       }}
     >
       <Box sx={{ mb: 2 }}>
-        <Typography variant="h4">Website Analytics</Typography>
+        <Typography variant="h4">Keuangan HSI BS</Typography>
         <Typography variant="body2" sx={{ mt: 0.75, color: "text.secondary" }}>
-          Statistik trafik diperbarui otomatis setiap 10 detik.
+          Website analisa keuangan HSI Boarding School
         </Typography>
       </Box>
       <Grid container spacing={3}>
