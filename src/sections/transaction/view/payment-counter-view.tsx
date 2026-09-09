@@ -18,13 +18,13 @@ import CardHeader from "@mui/material/CardHeader";
 import Typography from "@mui/material/Typography";
 import LinearProgress from "@mui/material/LinearProgress";
 import Autocomplete from "@mui/material/Autocomplete";
-import TableContainer from "@mui/material/TableContainer";
 
 import { CONFIG } from "@/global-config";
 import { paths } from "@/routes/paths";
 import { useAuth } from "@/auth/context/auth-context";
 import { toast } from "@/components/snackbar";
 import { Iconify } from "@/components/iconify";
+import { Scrollbar } from "@/components/scrollbar";
 import { DashboardContent } from "@/layouts/dashboard";
 import { CustomBreadcrumbs } from "@/components/custom-breadcrumbs";
 import { TableHeadCustom, TableNoData } from "@/components/table";
@@ -248,11 +248,11 @@ export function PaymentCounterView() {
         sx={{
           display: "grid",
           gap: { xs: 2, md: 3 },
-          gridTemplateColumns: { xs: "1fr", lg: "0.95fr 1.55fr" },
+          gridTemplateColumns: { xs: "1fr", xl: "minmax(320px, 0.9fr) minmax(0, 1.45fr)" },
           alignItems: "start",
         }}
       >
-        <Stack spacing={{ xs: 2, md: 3 }}>
+        <Stack spacing={{ xs: 2, md: 3 }} sx={{ minWidth: 0 }}>
           <Card
             sx={{
               overflow: "hidden",
@@ -466,7 +466,7 @@ export function PaymentCounterView() {
           </Card>
         </Stack>
 
-        <Stack spacing={{ xs: 2, md: 3 }}>
+        <Stack spacing={{ xs: 2, md: 3 }} sx={{ minWidth: 0 }}>
           <Box
             sx={{
               display: "grid",
@@ -566,8 +566,8 @@ export function PaymentCounterView() {
               <TableNoData notFound={!selectedStudent} />
             </Stack>
 
-            <TableContainer sx={{ display: { xs: "none", md: "block" }, width: 1, maxWidth: 1, overflowX: "auto" }}>
-              <Table sx={{ minWidth: 980 }}>
+            <Scrollbar sx={{ display: { xs: "none", md: "block" }, width: 1 }}>
+              <Table sx={{ minWidth: 900 }}>
                 <TableHeadCustom headCells={TABLE_HEAD} />
                 <TableBody>
                   {bills.map((bill) => {
@@ -639,7 +639,7 @@ export function PaymentCounterView() {
                   <TableNoData notFound={!selectedStudent} />
                 </TableBody>
               </Table>
-            </TableContainer>
+            </Scrollbar>
           </Card>
         </Stack>
       </Box>
