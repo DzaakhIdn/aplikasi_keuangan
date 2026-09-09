@@ -93,7 +93,13 @@ export const FinancialReportRepository = {
             kelas_id,
             rombel_id,
             kelas:kelas(nama_kelas),
-            rombel:rombel(rombel, kelas)
+            rombel:rombel(rombel, kelas),
+            kesiswaan_history(
+              tahun_ajaran_id,
+              status,
+              kelas:kelas(nama_kelas),
+              rombel:rombel(rombel, kelas)
+            )
           ),
           pembayaran_detail_keuangan(
             nominal_bayar,
@@ -116,7 +122,13 @@ export const FinancialReportRepository = {
             kelas_id,
             rombel_id,
             kelas:kelas(nama_kelas),
-            rombel:rombel(rombel, kelas)
+            rombel:rombel(rombel, kelas),
+            kesiswaan_history(
+              tahun_ajaran_id,
+              status,
+              kelas:kelas(nama_kelas),
+              rombel:rombel(rombel, kelas)
+            )
           ),
           jenis_pembayaran_keuangan(kode_jenis_pembayaran, nama_pembayaran, tipe_pembayaran),
           tahun_ajaran(tahun_ajaran)

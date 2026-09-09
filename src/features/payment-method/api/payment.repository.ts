@@ -64,10 +64,9 @@ export const PaymentRepository = {
   },
 
   async remove(id: string) {
-    // Jenis pembayaran bisa sudah dipakai tagihan/transaksi, jadi jangan hard delete.
     const { error } = await supabase
       .from("jenis_pembayaran_keuangan")
-      .update({ status: false })
+      .delete()
       .eq("id", id);
 
     if (error) throw error;

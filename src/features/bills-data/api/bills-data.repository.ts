@@ -16,6 +16,17 @@ export type BillDataRow = Database["public"]["Tables"]["tagihan_siswa_keuangan"]
       rombel: string;
       kelas: string;
     } | null;
+    kesiswaan_history?: {
+      tahun_ajaran_id: string;
+      status: string | null;
+      kelas?: {
+        nama_kelas: string;
+      } | null;
+      rombel?: {
+        rombel: string;
+        kelas: string;
+      } | null;
+    }[];
   } | null;
   jenis_pembayaran_keuangan?: {
     kode_jenis_pembayaran: string;
@@ -40,7 +51,13 @@ export const BillsDataRepository = {
           kelas_id,
           rombel_id,
           kelas:kelas(nama_kelas),
-          rombel:rombel(rombel, kelas)
+          rombel:rombel(rombel, kelas),
+          kesiswaan_history(
+            tahun_ajaran_id,
+            status,
+            kelas:kelas(nama_kelas),
+            rombel:rombel(rombel, kelas)
+          )
         ),
         jenis_pembayaran_keuangan(kode_jenis_pembayaran, nama_pembayaran, tipe_pembayaran),
         tahun_ajaran(tahun_ajaran)

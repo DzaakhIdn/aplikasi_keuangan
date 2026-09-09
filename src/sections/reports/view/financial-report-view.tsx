@@ -107,12 +107,11 @@ function filterPayments(
 }
 
 function formatClassName(row: BillDataRow) {
-  const kelas = row.siswa?.kelas_id
-    ? `Kelas ${row.siswa.kelas_id.slice(0, 8)}`
-    : "Tanpa kelas";
-  const rombel = row.siswa?.rombel_id
-    ? `Rombel ${row.siswa.rombel_id.slice(0, 8)}`
-    : "Tanpa rombel";
+  const history = row.siswa?.kesiswaan_history?.find(
+    (item) => item.tahun_ajaran_id === row.id_tahun_ajaran,
+  );
+  const kelas = history?.kelas?.nama_kelas ?? row.siswa?.kelas?.nama_kelas ?? "Tanpa kelas";
+  const rombel = history?.rombel?.rombel ?? row.siswa?.rombel?.rombel ?? "Tanpa rombel";
   return `${kelas} / ${rombel}`;
 }
 

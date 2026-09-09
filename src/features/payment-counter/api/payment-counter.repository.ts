@@ -53,13 +53,9 @@ export const PaymentCounterRepository = {
   },
 
   async syncStudentBills(student: PaymentStudent) {
-    if (!student.tahun_ajaran_id) {
-      throw new Error("Siswa belum memiliki tahun ajaran.");
-    }
-
     const { data, error } = await supabase.rpc("generate_tagihan_siswa_keuangan", {
       p_id_siswa: student.id,
-      p_id_tahun_ajaran: student.tahun_ajaran_id,
+      p_id_tahun_ajaran: null,
       p_mulai_tagihan: null,
     });
 

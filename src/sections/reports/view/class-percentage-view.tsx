@@ -30,7 +30,10 @@ function uniqueStrings(values: (string | null | undefined)[]) {
 }
 
 function getRombelName(row: BillDataRow) {
-  return row.siswa?.rombel?.rombel ?? "Tanpa rombel";
+  const history = row.siswa?.kesiswaan_history?.find(
+    (item) => item.tahun_ajaran_id === row.id_tahun_ajaran,
+  );
+  return history?.rombel?.rombel ?? row.siswa?.rombel?.rombel ?? "Tanpa rombel";
 }
 
 function buildClassSummary(rows: BillDataRow[]): ClassPaymentSummary[] {

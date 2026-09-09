@@ -1,7 +1,13 @@
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
+import Button from "@mui/material/Button";
+import { useBoolean } from "minimal-shared/hooks";
 
 import { DashboardContent } from "@/layouts/dashboard";
+import { toast } from "@/components/snackbar";
+import { Iconify } from "@/components/iconify";
+import { ConfirmDialog } from "@/components/custom-dialog";
+import { useResetPaymentData } from "@/features/payment-reset/api/payment-reset.mutation";
 
 import { WidgetSummary } from "../widget-summary";
 import { PaymentsSummary } from "../payments-summary";
@@ -10,6 +16,21 @@ import { _mock } from "@/_mock";
 import Typography from "@mui/material/Typography";
 
 export function OverviewView() {
+  const resetDialog = useBoolean();
+  const resetPaymentData = useResetPaymentData();
+
+  const handleResetPaymentData = () => {
+    resetPaymentData.mutate(undefined, {
+      onSuccess: (result) => {
+        toast.success(
+          `Reset berhasil: ${result.tagihan_siswa_keuangan} tagihan, ${result.pembayaran_keuangan} pembayaran dihapus`,
+        );
+        resetDialog.onFalse();
+      },
+      onError: (error: Error) => toast.error(error.message),
+    });
+  };
+
   const _bankingRecentTransitions = [
     {
       id: _mock.id(2),
@@ -76,11 +97,31 @@ export function OverviewView() {
         mb: { xs: 3, md: 5 },
       }}
     >
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="h4">Keuangan HSI BS</Typography>
-        <Typography variant="body2" sx={{ mt: 0.75, color: "text.secondary" }}>
-          Website analisa keuangan HSI Boarding School
-        </Typography>
+      <Box
+        sx={{
+          mb: 2,
+          gap: 2,
+          display: "flex",
+          alignItems: { xs: "flex-start", sm: "center" },
+          flexDirection: { xs: "column", sm: "row" },
+          justifyContent: "space-between",
+        }}
+      >
+        <Box>
+          <Typography variant="h4">Keuangan HSI BS</Typography>
+          <Typography variant="body2" sx={{ mt: 0.75, color: "text.secondary" }}>
+            Website analisa keuangan HSI Boarding School
+          </Typography>
+        </Box>
+
+        <Button
+          color="error"
+          variant="outlined"
+          onClick={resetDialog.onTrue}
+          startIcon={<Iconify icon="solar:restart-bold" />}
+        >
+          Reset Data Pembayaran
+        </Button>
       </Box>
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -191,6 +232,23 @@ export function OverviewView() {
           { id: "status", label: "Status" },
           { id: "" },
         ]}
+      />
+
+      <ConfirmDialog
+        open={resetDialog.value}
+        onClose={resetDialog.onFalse}
+        title="Reset data pembayaran?"
+        content="Aksi ini akan menghapus semua data tagihan, transaksi pembayaran, dan detail pembayaran. Data master seperti santri, tahun ajaran, jenis pembayaran, dan keringanan biaya tidak akan dihapus."
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleResetPaymentData}
+            disabled={resetPaymentData.isPending}
+          >
+            {resetPaymentData.isPending ? "Mereset..." : "Reset Data"}
+          </Button>
+        }
       />
     </DashboardContent>
   );
