@@ -8,8 +8,8 @@ import { chipProps, FiltersBlock, FiltersResult } from '@/components/filters-res
 
 interface TrackTableFiltersResultProps {
   filters: any;
-  activeAcademicYearId: string;
-  academicYearLabel: string;
+  activeAcademicYearId?: string;
+  academicYearLabel?: string;
   totalResults: number;
   onResetPage: () => void;
   sx: any;
@@ -37,7 +37,7 @@ export function PaymentTableFiltersResult({
 
   const handleRemoveAcademicYear = useCallback(() => {
     onResetPage();
-    updateFilters({ academicYear: activeAcademicYearId });
+    updateFilters({ academicYear: activeAcademicYearId ?? 'all' });
   }, [activeAcademicYearId, onResetPage, updateFilters]);
 
   return (
@@ -53,9 +53,9 @@ export function PaymentTableFiltersResult({
 
       <FiltersBlock
         label="Tahun ajaran:"
-        isShow={currentFilters.academicYear !== activeAcademicYearId}
+        isShow={!!currentFilters.academicYear && currentFilters.academicYear !== activeAcademicYearId}
       >
-        <Chip {...chipProps} label={academicYearLabel} onDelete={handleRemoveAcademicYear} />
+        <Chip {...chipProps} label={academicYearLabel ?? currentFilters.academicYear} onDelete={handleRemoveAcademicYear} />
       </FiltersBlock>
 
       <FiltersBlock label="Keyword:" isShow={!!currentFilters.name}>

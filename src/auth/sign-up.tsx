@@ -37,7 +37,7 @@ export function SignUpView() {
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      const data = await signUp(values);
+      const data = await signUp({ email: values.email, password: values.password });
       if (data.session) window.location.assign('/');
       else setSubmitted(true);
     } catch (error) {

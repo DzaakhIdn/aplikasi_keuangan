@@ -5,6 +5,7 @@ import TableHead from '@mui/material/TableHead';
 import TableCell from '@mui/material/TableCell';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import { type SxProps, type Theme } from '@mui/material/styles';
+import type { SortDirection } from '@mui/material/TableCell';
 
 // ----------------------------------------------------------------------
 
@@ -24,14 +25,14 @@ const visuallyHidden = {
 
 interface TableHeadCustomProps {
   sx?: SxProps<Theme>;
-  order?: string;
+  order?: 'asc' | 'desc';
   onSort?: (id: string) => void;
   orderBy?: string;
   headCells: {
     id: string;
     label: string;
     width?: number;
-    align?: string;
+    align?: 'left' | 'right' | 'inherit' | 'center' | 'justify';
     sx?: SxProps<Theme>;
   }[];
   rowCount?: number;
@@ -72,7 +73,7 @@ export function TableHeadCustom({
           <TableCell
             key={headCell.id}
             align={headCell.align || 'left'}
-            sortDirection={orderBy === headCell.id ? order : false}
+            sortDirection={(orderBy === headCell.id ? order : false) as SortDirection}
             sx={[
               { width: headCell.width },
               ...(Array.isArray(headCell.sx) ? headCell.sx : [headCell.sx]),

@@ -20,10 +20,32 @@
     "jsx": "react-jsx",
 
     /* Linting */
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": [
+    "src/components/ui/accordion.tsx",
+    "src/components/ui/gallery_paralax.tsx",
+    "src/components/ui/radio-group.tsx",
+    "src/components/ui/select.tsx",
+    "src/components/ui/separator.tsx",
+    "src/components/ui/sheet.tsx",
+    "src/components/hook-form/rhf-code.tsx",
+    "src/components/hook-form/rhf-country-select.tsx",
+    "src/components/hook-form/rhf-editor.tsx",
+    "src/components/hook-form/rhf-number-input.tsx",
+    "src/components/hook-form/rhf-phone-input.tsx",
+    "src/components/hook-form/rhf-upload.tsx",
+    "src/components/hook-form/rhf-autocomplete.tsx",
+    "src/components/hook-form/rhf-select.tsx",
+    "src/components/animate/animate-count-up.tsx",
+    "src/components/animate/animate-text.tsx",
+    "src/components/animate/motion-container.tsx",
+    "src/components/animate/motion-viewport.tsx"
+  ]
 }

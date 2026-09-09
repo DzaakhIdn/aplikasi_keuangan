@@ -277,7 +277,7 @@ export function PaymentCounterView() {
                   <Iconify icon="solar:wallet-money-bold-duotone" width={32} />
                 </Box>
                 <Box>
-                  <Typography variant={{ xs: "h6", sm: "h5" }}>Loket Pembayaran</Typography>
+                  <Typography variant="h5" sx={{ typography: { xs: "h6", sm: "h5" } }}>Loket Pembayaran</Typography>
                 </Box>
               </Stack>
 
@@ -288,13 +288,13 @@ export function PaymentCounterView() {
                   <Typography variant="caption" sx={{ opacity: 0.72 }}>
                     Dipilih
                   </Typography>
-                  <Typography variant={{ xs: "h5", sm: "h4" }}>{selectedItems.length}</Typography>
+                  <Typography variant="h4" sx={{ typography: { xs: "h5", sm: "h4" } }}>{selectedItems.length}</Typography>
                 </Box>
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="caption" sx={{ opacity: 0.72 }}>
                     Total Bayar
                   </Typography>
-                  <Typography variant={{ xs: "h6", sm: "h4" }} noWrap>
+                  <Typography variant="h4" sx={{ typography: { xs: "h6", sm: "h4" } }} noWrap>
                     {formatCurrency(totalPayment)}
                   </Typography>
                 </Box>
@@ -440,7 +440,7 @@ export function PaymentCounterView() {
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
                   Total pembayaran
                 </Typography>
-                <Typography variant={{ xs: "h4", sm: "h3" }} sx={{ wordBreak: "break-word" }}>
+                <Typography variant="h3" sx={{ typography: { xs: "h4", sm: "h3" }, wordBreak: "break-word" }}>
                   {formatCurrency(totalPayment)}
                 </Typography>
               </Box>

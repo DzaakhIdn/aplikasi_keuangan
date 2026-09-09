@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { ChangeEvent } from "react";
+import type { ChangeEvent } from "react";
 
 // ----------------------------------------------------------------------
 

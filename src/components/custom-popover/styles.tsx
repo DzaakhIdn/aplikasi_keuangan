@@ -83,7 +83,7 @@ const arrowDirection = {
 
 export const Arrow = styled("span", {
   shouldForwardProp: (prop) =>
-    !["size", "placement", "offset", "sx"].includes(prop),
+    !["size", "placement", "offset", "sx"].includes(String(prop)),
 })<ArrowProps>(({ offset = 0, size = 0, theme }) => {
   const isRtl = theme.direction === "rtl";
 

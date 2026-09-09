@@ -60,7 +60,7 @@ export function SettingsDrawer({ sx, defaultSettings }: SettingsDrawerProps) {
 
   const handleReset = useCallback(() => {
     settings.onReset();
-    setMode(defaultSettings.colorScheme);
+    setMode(defaultSettings.colorScheme as Parameters<typeof setMode>[0]);
   }, [defaultSettings.colorScheme, setMode, settings]);
 
   const renderHead = () => (
