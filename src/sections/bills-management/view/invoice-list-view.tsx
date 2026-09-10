@@ -110,6 +110,13 @@ function getUniqueOptions(rows: BillDataRow[], getValue: (row: BillDataRow) => s
   return [...new Set(rows.map(getValue).filter(Boolean))] as string[];
 }
 
+function getClassName(row: BillDataRow) {
+  const history = row.siswa?.kesiswaan_history?.find(
+    (item) => item.tahun_ajaran_id === row.id_tahun_ajaran,
+  );
+  return history?.kelas?.nama_kelas ?? row.siswa?.kelas?.nama_kelas ?? "Tanpa kelas";
+}
+
 // ----------------------------------------------------------------------
 
 export function InvoiceListView() {
@@ -120,6 +127,7 @@ export function InvoiceListView() {
   const [status, setStatus] = useState<"all" | BillStatus>("all");
   const [paymentType, setPaymentType] = useState("all");
   const [academicYear, setAcademicYear] = useState("all");
+  const [className, setClassName] = useState("all");
 
   const paymentTypeOptions = useMemo(
     () => getUniqueOptions(data, (row) => row.jenis_pembayaran_keuangan?.nama_pembayaran),
@@ -127,6 +135,10 @@ export function InvoiceListView() {
   );
   const academicYearOptions = useMemo(
     () => getUniqueOptions(data, (row) => row.tahun_ajaran?.tahun_ajaran),
+    [data],
+  );
+  const classOptions = useMemo(
+    () => getUniqueOptions(data, getClassName),
     [data],
   );
   const filteredData = useMemo(() => {
@@ -140,8 +152,12 @@ export function InvoiceListView() {
       result = result.filter((row) => row.tahun_ajaran?.tahun_ajaran === academicYear);
     }
 
+    if (className !== "all") {
+      result = result.filter((row) => getClassName(row) === className);
+    }
+
     return result;
-  }, [academicYear, data, keyword, paymentType, status]);
+  }, [academicYear, className, data, keyword, paymentType, status]);
   const visibleRows = filteredData.slice(table.page * table.rowsPerPage, table.page * table.rowsPerPage + table.rowsPerPage);
   const paidRows = filteredData.filter((row) => row.status === "lunas");
   const totalPaidSuccess = paidRows.reduce((total, row) => total + row.nominal_dibayar, 0);
@@ -241,7 +257,7 @@ export function InvoiceListView() {
             p: 2.5,
             gap: 2,
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "1fr 220px 220px" },
+            gridTemplateColumns: { xs: "1fr", md: "1fr 220px 220px", xl: "1fr 220px 220px 220px" },
           }}
         >
           <TextField
@@ -291,6 +307,23 @@ export function InvoiceListView() {
           >
             <MenuItem value="all">Semua tahun</MenuItem>
             {academicYearOptions.map((option) => (
+              <MenuItem key={option} value={option}>
+                {option}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <TextField
+            select
+            label="Kelas"
+            value={className}
+            onChange={(event) => {
+              setClassName(event.target.value);
+              table.onResetPage();
+            }}
+          >
+            <MenuItem value="all">Semua kelas</MenuItem>
+            {classOptions.map((option) => (
               <MenuItem key={option} value={option}>
                 {option}
               </MenuItem>

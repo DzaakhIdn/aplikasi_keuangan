@@ -1,75 +1,109 @@
-# React + TypeScript + Vite
+# Aplikasi Keuangan Sekolah
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplikasi ini mengelola jenis pembayaran, tagihan santri, pembayaran loket, bukti pembayaran Google Drive, riwayat transaksi, laporan keuangan, persentase rombel, dan tunggakan siswa.
 
-Currently, two official plugins are available:
+## Alur Pembayaran
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Siapkan tahun ajaran
 
-## React Compiler
+   Buat data tahun ajaran, misalnya `2025/2026`. Salah satu tahun ajaran harus berstatus `aktif`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+2. Lengkapi `kesiswaan_history`
 
-## Expanding the ESLint configuration
+   Setiap santri yang aktif pada suatu tahun ajaran harus punya record di `kesiswaan_history`. Tabel ini menentukan posisi santri pada tahun ajaran tersebut, seperti kelas, rombel, asrama, cabang, dan status.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+3. Buat jenis pembayaran
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+   Bendahara membuat jenis pembayaran seperti `SPP`, `Daftar Ulang`, `Uang Gedung`, atau `Seragam`. Setiap jenis pembayaran wajib terikat ke satu tahun ajaran.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+4. Generate tagihan otomatis
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+   Saat jenis pembayaran dibuat atau diaktifkan, database otomatis membuat tagihan untuk santri yang aktif pada tahun ajaran tersebut berdasarkan `kesiswaan_history`.
 
+   Syarat santri terkena tagihan:
+
+   ```text
+   kesiswaan_history.tahun_ajaran_id = jenis_pembayaran.id_tahun_ajaran
+   kesiswaan_history.status = aktif
+   kesiswaan.status = aktif
+   ```
+
+5. Tipe pembayaran
+
+   Jika tipe pembayaran `Bulanan`, sistem membuat tagihan per bulan sepanjang rentang tahun ajaran. Jika tipe pembayaran `Sekali`, sistem hanya membuat satu tagihan.
+
+6. Keringanan biaya
+
+   Jika santri memiliki keringanan untuk jenis pembayaran tertentu, nominal tagihan dikurangi otomatis.
+
+   ```text
+   nominal_tagihan = nominal_jenis_pembayaran - potongan
+   ```
+
+7. Cek data tagihan
+
+   Halaman Data Tagihan menampilkan tagihan yang sudah terbentuk, termasuk santri, jenis pembayaran, periode, nominal tagihan, nominal dibayar, sisa, jatuh tempo, dan status.
+
+8. Pembayaran di loket
+
+   Bendahara membuka Loket Pembayaran, mencari santri, sinkron tagihan jika perlu, memilih tagihan, mengisi nominal bayar, memilih metode pembayaran, mengunggah bukti, lalu menyimpan pembayaran.
+
+9. Pembayaran sebagian
+
+   Tagihan bisa dibayar sebagian. Jika belum lunas, status menjadi `sebagian`. Jika sisa tagihan sudah `0`, status menjadi `lunas`.
+
+10. Simpan transaksi
+
+    Pembayaran disimpan ke `pembayaran_keuangan` sebagai header transaksi dan `pembayaran_detail_keuangan` sebagai rincian tagihan yang dibayar.
+
+11. Upload bukti pembayaran
+
+    Bukti pembayaran dikirim ke backend Express, lalu disimpan ke Google Drive. Link bukti disimpan pada transaksi pembayaran.
+
+12. Update status otomatis
+
+    Trigger database menghitung ulang `nominal_dibayar`, `sisa_tagihan`, dan `status` tagihan setelah detail pembayaran berubah.
+
+13. Riwayat dan laporan
+
+    Data pembayaran dan tagihan muncul di Riwayat Pembayaran, Laporan Keuangan, Persentase Rombel, dan Tunggakan Siswa.
+
+## Ringkasan Flow
+
+```text
+Tahun ajaran dibuat
+        ↓
+Data kesiswaan_history dilengkapi
+        ↓
+Jenis pembayaran dibuat
+        ↓
+Tagihan otomatis dibuat untuk santri aktif pada tahun ajaran itu
+        ↓
+Bendahara menerima pembayaran di loket
+        ↓
+Bukti pembayaran upload ke Google Drive
+        ↓
+Transaksi tersimpan
+        ↓
+Status tagihan update otomatis
+        ↓
+Data muncul di riwayat, laporan, persentase rombel, dan tunggakan siswa
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Deploy Singkat
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Frontend dan backend dideploy sebagai dua service terpisah.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Frontend:
 
+```text
+Dockerfile.frontend
+Port 80
+```
+
+Backend:
+
+```text
+Dockerfile.backend
+Port sesuai SERVER_PORT
 ```
