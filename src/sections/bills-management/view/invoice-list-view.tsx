@@ -30,9 +30,18 @@ import { Iconify } from "@/components/iconify";
 import { Scrollbar } from "@/components/scrollbar";
 import { DashboardContent } from "@/layouts/dashboard";
 import { CustomBreadcrumbs } from "@/components/custom-breadcrumbs";
-import { TableHeadCustom, TableNoData, TablePaginationCustom, TableSelectedAction, useTable } from "@/components/table";
+import {
+  TableHeadCustom,
+  TableNoData,
+  TablePaginationCustom,
+  TableSelectedAction,
+  useTable,
+} from "@/components/table";
 import { billsDataQueries } from "@/features/bills-data/api/bills-data.queries";
-import type { BillDataRow, BillStatus } from "@/features/bills-data/api/bills-data.repository";
+import type {
+  BillDataRow,
+  BillStatus,
+} from "@/features/bills-data/api/bills-data.repository";
 import { InvoiceAnalytic } from "../invoice-analytic";
 
 // ----------------------------------------------------------------------
@@ -64,7 +73,11 @@ const TABLE_HEAD = [
   { id: "actions", label: "", width: 80 },
 ];
 
-const STATUS_OPTIONS: { value: "all" | BillStatus; label: string; color: "default" | "success" | "warning" | "error" | "info" }[] = [
+const STATUS_OPTIONS: {
+  value: "all" | BillStatus;
+  label: string;
+  color: "default" | "success" | "warning" | "error" | "info";
+}[] = [
   { value: "all", label: "Semua", color: "default" },
   { value: "pending", label: "Pending", color: "warning" },
   { value: "belum_lunas", label: "Belum Lunas", color: "error" },
@@ -80,10 +93,16 @@ function formatPeriod(row: BillDataRow) {
 }
 
 function getStatusConfig(status: BillStatus) {
-  return STATUS_OPTIONS.find((item) => item.value === status) ?? STATUS_OPTIONS[0];
+  return (
+    STATUS_OPTIONS.find((item) => item.value === status) ?? STATUS_OPTIONS[0]
+  );
 }
 
-function filterBills(rows: BillDataRow[], keyword: string, status: "all" | BillStatus) {
+function filterBills(
+  rows: BillDataRow[],
+  keyword: string,
+  status: "all" | BillStatus,
+) {
   let result = rows;
 
   if (status !== "all") {
@@ -106,7 +125,10 @@ function filterBills(rows: BillDataRow[], keyword: string, status: "all" | BillS
   return result;
 }
 
-function getUniqueOptions(rows: BillDataRow[], getValue: (row: BillDataRow) => string | undefined) {
+function getUniqueOptions(
+  rows: BillDataRow[],
+  getValue: (row: BillDataRow) => string | undefined,
+) {
   return [...new Set(rows.map(getValue).filter(Boolean))] as string[];
 }
 
@@ -114,7 +136,9 @@ function getClassName(row: BillDataRow) {
   const history = row.siswa?.kesiswaan_history?.find(
     (item) => item.tahun_ajaran_id === row.id_tahun_ajaran,
   );
-  return history?.kelas?.nama_kelas ?? row.siswa?.kelas?.nama_kelas ?? "Tanpa kelas";
+  return (
+    history?.kelas?.nama_kelas ?? row.siswa?.kelas?.nama_kelas ?? "Tanpa kelas"
+  );
 }
 
 // ----------------------------------------------------------------------
@@ -128,9 +152,14 @@ export function InvoiceListView() {
   const [paymentType, setPaymentType] = useState("all");
   const [academicYear, setAcademicYear] = useState("all");
   const [className, setClassName] = useState("all");
+  const [cabang, setCabang] = useState("all");
 
   const paymentTypeOptions = useMemo(
-    () => getUniqueOptions(data, (row) => row.jenis_pembayaran_keuangan?.nama_pembayaran),
+    () =>
+      getUniqueOptions(
+        data,
+        (row) => row.jenis_pembayaran_keuangan?.nama_pembayaran,
+      ),
     [data],
   );
   const academicYearOptions = useMemo(
@@ -141,54 +170,100 @@ export function InvoiceListView() {
     () => getUniqueOptions(data, getClassName),
     [data],
   );
+  const cabangOptions = useMemo(
+    () => getUniqueOptions(data, (row) => row.siswa?.cabang?.nama_cabang),
+    [data],
+  );
   const filteredData = useMemo(() => {
     let result = filterBills(data, keyword, status);
 
     if (paymentType !== "all") {
-      result = result.filter((row) => row.jenis_pembayaran_keuangan?.nama_pembayaran === paymentType);
+      result = result.filter(
+        (row) => row.jenis_pembayaran_keuangan?.nama_pembayaran === paymentType,
+      );
     }
 
     if (academicYear !== "all") {
-      result = result.filter((row) => row.tahun_ajaran?.tahun_ajaran === academicYear);
+      result = result.filter(
+        (row) => row.tahun_ajaran?.tahun_ajaran === academicYear,
+      );
     }
 
     if (className !== "all") {
       result = result.filter((row) => getClassName(row) === className);
     }
 
-    return result;
-  }, [academicYear, className, data, keyword, paymentType, status]);
-  const visibleRows = filteredData.slice(table.page * table.rowsPerPage, table.page * table.rowsPerPage + table.rowsPerPage);
-  const paidRows = filteredData.filter((row) => row.status === "lunas");
-  const totalPaidSuccess = paidRows.reduce((total, row) => total + row.nominal_dibayar, 0);
-  const totalSisa = filteredData.reduce((total, row) => total + row.sisa_tagihan, 0);
-  const getStatusRows = (value: BillStatus) => data.filter((row) => row.status === value);
-  const getStatusAmount = (value: BillStatus) => getStatusRows(value).reduce((total, row) => total + row.nominal_tagihan, 0);
-  const getStatusPercent = (value: BillStatus) => (data.length ? (getStatusRows(value).length / data.length) * 100 : 0);
+    if (cabang !== "all") {
+      result = result.filter(
+        (row) => row.siswa?.cabang?.nama_cabang === cabang,
+      );
+    }
 
-  const handleChangeStatus = (_event: React.SyntheticEvent, value: "all" | BillStatus) => {
+    return result;
+  }, [academicYear, cabang, className, data, keyword, paymentType, status]);
+  const visibleRows = filteredData.slice(
+    table.page * table.rowsPerPage,
+    table.page * table.rowsPerPage + table.rowsPerPage,
+  );
+  const paidRows = filteredData.filter((row) => row.status === "lunas");
+  const totalPaidSuccess = paidRows.reduce(
+    (total, row) => total + row.nominal_dibayar,
+    0,
+  );
+  const totalSisa = filteredData.reduce(
+    (total, row) => total + row.sisa_tagihan,
+    0,
+  );
+  const getStatusRows = (value: BillStatus) =>
+    data.filter((row) => row.status === value);
+  const getStatusAmount = (value: BillStatus) =>
+    getStatusRows(value).reduce((total, row) => total + row.nominal_tagihan, 0);
+  const getStatusPercent = (value: BillStatus) =>
+    data.length ? (getStatusRows(value).length / data.length) * 100 : 0;
+
+  const handleChangeStatus = (
+    _event: React.SyntheticEvent,
+    value: "all" | BillStatus,
+  ) => {
     setStatus(value);
     table.onResetPage();
   };
 
   return (
-    <DashboardContent maxWidth={false} sx={{ borderTop: "solid 1px rgba(145, 158, 171, 0.12)", pt: 3 }}>
+    <DashboardContent
+      maxWidth={false}
+      sx={{ borderTop: "solid 1px rgba(145, 158, 171, 0.12)", pt: 3 }}
+    >
       <CustomBreadcrumbs
         heading="Data Tagihan"
-        links={[{ name: "Dashboard", href: paths.ROOTS }, { name: "Manajemen Tagihan" }, { name: "Data Tagihan" }]}
+        links={[
+          { name: "Dashboard", href: paths.ROOTS },
+          { name: "Manajemen Tagihan" },
+          { name: "Data Tagihan" },
+        ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
       <Card sx={{ mb: { xs: 3, md: 5 } }}>
         <Scrollbar sx={{ width: 1, minHeight: 108 }}>
           <Stack
-            divider={<Divider orientation="vertical" flexItem sx={{ borderStyle: "dashed" }} />}
+            divider={
+              <Divider
+                orientation="vertical"
+                flexItem
+                sx={{ borderStyle: "dashed" }}
+              />
+            }
             sx={{ py: 2, flexDirection: "row" }}
           >
             <InvoiceAnalytic
               title="Total Berhasil"
               total={paidRows.length}
-              percent={filteredData.length ? (paidRows.length / filteredData.length) * 100 : 0}
+              percent={
+                filteredData.length
+                  ? (paidRows.length / filteredData.length) * 100
+                  : 0
+              }
               price={totalPaidSuccess}
               icon="solar:bill-list-bold-duotone"
               color={theme.vars.palette.info.main}
@@ -244,8 +319,13 @@ export function InvoiceListView() {
               label={item.label}
               iconPosition="end"
               icon={
-                <Label variant={item.value === status ? "filled" : "soft"} color={item.color}>
-                  {item.value === "all" ? data.length : data.filter((row) => row.status === item.value).length}
+                <Label
+                  variant={item.value === status ? "filled" : "soft"}
+                  color={item.color}
+                >
+                  {item.value === "all"
+                    ? data.length
+                    : data.filter((row) => row.status === item.value).length}
                 </Label>
               }
             />
@@ -257,7 +337,11 @@ export function InvoiceListView() {
             p: 2.5,
             gap: 2,
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "1fr 220px 220px", xl: "1fr 220px 220px 220px" },
+            gridTemplateColumns: {
+              xs: "1fr",
+              md: "1fr 180px 180px 180px",
+              xl: "1fr 180px 180px 180px 180px",
+            },
           }}
         >
           <TextField
@@ -272,12 +356,32 @@ export function InvoiceListView() {
               input: {
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Iconify icon="eva:search-fill" sx={{ color: "text.disabled" }} />
+                    <Iconify
+                      icon="eva:search-fill"
+                      sx={{ color: "text.disabled" }}
+                    />
                   </InputAdornment>
                 ),
               },
             }}
           />
+
+          <TextField
+            select
+            label="Cabang"
+            value={cabang}
+            onChange={(event) => {
+              setCabang(event.target.value);
+              table.onResetPage();
+            }}
+          >
+            <MenuItem value="all">Semua cabang</MenuItem>
+            {cabangOptions.map((option) => (
+              <MenuItem key={option} value={option}>
+                {option}
+              </MenuItem>
+            ))}
+          </TextField>
 
           <TextField
             select
@@ -331,7 +435,10 @@ export function InvoiceListView() {
           </TextField>
         </Box>
 
-        <Stack spacing={1.5} sx={{ display: { xs: "flex", md: "none" }, p: 2, pt: 0 }}>
+        <Stack
+          spacing={1.5}
+          sx={{ display: { xs: "flex", md: "none" }, p: 2, pt: 0 }}
+        >
           {visibleRows.map((row) => (
             <BillMobileCard
               key={row.id}
@@ -363,64 +470,79 @@ export function InvoiceListView() {
             }
           />
 
-        <TableContainer sx={{ display: { xs: "none", md: "block" }, overflowX: "auto" }}>
-          <Table sx={{ minWidth: 1180 }}>
-            <TableHeadCustom
-              headCells={TABLE_HEAD}
-              rowCount={filteredData.length}
-              numSelected={table.selected.length}
-              onSelectAllRows={(checked) =>
-                table.onSelectAllRows(
-                  checked,
-                  filteredData.map((row) => row.id),
-                )
-              }
-            />
-            <TableBody>
-              {visibleRows.map((row) => {
-                const statusConfig = getStatusConfig(row.status);
+          <TableContainer
+            sx={{ display: { xs: "none", md: "block" }, overflowX: "auto" }}
+          >
+            <Table sx={{ minWidth: 1180 }}>
+              <TableHeadCustom
+                headCells={TABLE_HEAD}
+                rowCount={filteredData.length}
+                numSelected={table.selected.length}
+                onSelectAllRows={(checked) =>
+                  table.onSelectAllRows(
+                    checked,
+                    filteredData.map((row) => row.id),
+                  )
+                }
+              />
+              <TableBody>
+                {visibleRows.map((row) => {
+                  const statusConfig = getStatusConfig(row.status);
 
-                return (
-                  <TableRow hover key={row.id}>
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        checked={table.selected.includes(row.id)}
-                        onClick={() => table.onSelectRow(row.id)}
-                        slotProps={{
-                          input: {
-                            id: `${row.id}-checkbox`,
-                            "aria-label": `${row.id} checkbox`,
-                          },
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <StudentCell row={row} />
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">{row.jenis_pembayaran_keuangan?.nama_pembayaran ?? "-"}</Typography>
-                      <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                        {row.jenis_pembayaran_keuangan?.kode_jenis_pembayaran ?? "-"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>{formatPeriod(row)}</TableCell>
-                    <TableCell>{fCurrency(row.nominal_tagihan)}</TableCell>
-                    <TableCell>{fCurrency(row.nominal_dibayar)}</TableCell>
-                    <TableCell>{fCurrency(row.sisa_tagihan)}</TableCell>
-                    <TableCell>{row.tanggal_jatuh_tempo ? fDate(row.tanggal_jatuh_tempo) : "-"}</TableCell>
-                    <TableCell>
-                      <Label variant="soft" color={statusConfig.color}>{statusConfig.label}</Label>
-                    </TableCell>
-                    <TableCell align="right">
-                      <BillActions row={row} />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              <TableNoData notFound={!isLoading && !filteredData.length} />
-            </TableBody>
-          </Table>
-        </TableContainer>
+                  return (
+                    <TableRow hover key={row.id}>
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          checked={table.selected.includes(row.id)}
+                          onClick={() => table.onSelectRow(row.id)}
+                          slotProps={{
+                            input: {
+                              id: `${row.id}-checkbox`,
+                              "aria-label": `${row.id} checkbox`,
+                            },
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <StudentCell row={row} />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {row.jenis_pembayaran_keuangan?.nama_pembayaran ??
+                            "-"}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: "text.secondary" }}
+                        >
+                          {row.jenis_pembayaran_keuangan
+                            ?.kode_jenis_pembayaran ?? "-"}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>{formatPeriod(row)}</TableCell>
+                      <TableCell>{fCurrency(row.nominal_tagihan)}</TableCell>
+                      <TableCell>{fCurrency(row.nominal_dibayar)}</TableCell>
+                      <TableCell>{fCurrency(row.sisa_tagihan)}</TableCell>
+                      <TableCell>
+                        {row.tanggal_jatuh_tempo
+                          ? fDate(row.tanggal_jatuh_tempo)
+                          : "-"}
+                      </TableCell>
+                      <TableCell>
+                        <Label variant="soft" color={statusConfig.color}>
+                          {statusConfig.label}
+                        </Label>
+                      </TableCell>
+                      <TableCell align="right">
+                        <BillActions row={row} />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                <TableNoData notFound={!isLoading && !filteredData.length} />
+              </TableBody>
+            </Table>
+          </TableContainer>
         </Box>
 
         <TablePaginationCustom
@@ -437,27 +559,59 @@ export function InvoiceListView() {
   );
 }
 
-function BillMobileCard({ row, selected, onSelect }: { row: BillDataRow; selected: boolean; onSelect: () => void }) {
+function BillMobileCard({
+  row,
+  selected,
+  onSelect,
+}: {
+  row: BillDataRow;
+  selected: boolean;
+  onSelect: () => void;
+}) {
   const statusConfig = getStatusConfig(row.status);
 
   return (
-    <Box sx={{ p: 2, borderRadius: 2, border: "1px solid", borderColor: selected ? "primary.main" : "divider" }}>
+    <Box
+      sx={{
+        p: 2,
+        borderRadius: 2,
+        border: "1px solid",
+        borderColor: selected ? "primary.main" : "divider",
+      }}
+    >
       <Stack spacing={1.5}>
-        <Stack direction="row" spacing={1.5} sx={{ alignItems: "flex-start", justifyContent: "space-between" }}>
-          <Stack direction="row" spacing={1} sx={{ minWidth: 0, alignItems: "center" }}>
+        <Stack
+          direction="row"
+          spacing={1.5}
+          sx={{ alignItems: "flex-start", justifyContent: "space-between" }}
+        >
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ minWidth: 0, alignItems: "center" }}
+          >
             <Checkbox checked={selected} onChange={onSelect} sx={{ p: 0.25 }} />
             <StudentCell row={row} />
           </Stack>
-          <Stack direction="row" spacing={0.5} sx={{ alignItems: "center", flexShrink: 0 }}>
-            <Label variant="soft" color={statusConfig.color}>{statusConfig.label}</Label>
+          <Stack
+            direction="row"
+            spacing={0.5}
+            sx={{ alignItems: "center", flexShrink: 0 }}
+          >
+            <Label variant="soft" color={statusConfig.color}>
+              {statusConfig.label}
+            </Label>
             <BillActions row={row} />
           </Stack>
         </Stack>
 
         <Box>
-          <Typography variant="body2">{row.jenis_pembayaran_keuangan?.nama_pembayaran ?? "-"}</Typography>
+          <Typography variant="body2">
+            {row.jenis_pembayaran_keuangan?.nama_pembayaran ?? "-"}
+          </Typography>
           <Typography variant="caption" sx={{ color: "text.secondary" }}>
-            {row.jenis_pembayaran_keuangan?.kode_jenis_pembayaran ?? "-"} • {formatPeriod(row)}
+            {row.jenis_pembayaran_keuangan?.kode_jenis_pembayaran ?? "-"} •{" "}
+            {formatPeriod(row)}
           </Typography>
         </Box>
 
@@ -465,7 +619,12 @@ function BillMobileCard({ row, selected, onSelect }: { row: BillDataRow; selecte
           <AmountInfo label="Tagihan" value={fCurrency(row.nominal_tagihan)} />
           <AmountInfo label="Dibayar" value={fCurrency(row.nominal_dibayar)} />
           <AmountInfo label="Sisa" value={fCurrency(row.sisa_tagihan)} />
-          <AmountInfo label="Jatuh Tempo" value={row.tanggal_jatuh_tempo ? fDate(row.tanggal_jatuh_tempo) : "-"} />
+          <AmountInfo
+            label="Jatuh Tempo"
+            value={
+              row.tanggal_jatuh_tempo ? fDate(row.tanggal_jatuh_tempo) : "-"
+            }
+          />
         </Box>
       </Stack>
     </Box>
@@ -477,13 +636,21 @@ function StudentCell({ row }: { row: BillDataRow }) {
   const nis = row.siswa?.nis ?? "-";
 
   return (
-    <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", minWidth: 0 }}>
+    <Stack
+      direction="row"
+      spacing={1.5}
+      sx={{ alignItems: "center", minWidth: 0 }}
+    >
       <Avatar alt={name} sx={{ width: 40, height: 40, flexShrink: 0 }}>
         {name.charAt(0).toUpperCase()}
       </Avatar>
       <Box sx={{ minWidth: 0 }}>
-        <Typography variant="body2" noWrap>{name}</Typography>
-        <Typography variant="caption" sx={{ color: "text.secondary" }} noWrap>{nis}</Typography>
+        <Typography variant="body2" noWrap>
+          {name}
+        </Typography>
+        <Typography variant="caption" sx={{ color: "text.secondary" }} noWrap>
+          {nis}
+        </Typography>
       </Box>
     </Stack>
   );
@@ -502,9 +669,23 @@ function BillActions({ row }: { row: BillDataRow }) {
 
 function AmountInfo({ label, value }: { label: string; value: string }) {
   return (
-    <Box sx={{ p: 1.25, borderRadius: 1.5, bgcolor: "background.neutral", minWidth: 0 }}>
-      <Typography variant="caption" sx={{ color: "text.secondary" }}>{label}</Typography>
-      <Typography variant="body2" sx={{ fontWeight: 600, wordBreak: "break-word" }}>{value}</Typography>
+    <Box
+      sx={{
+        p: 1.25,
+        borderRadius: 1.5,
+        bgcolor: "background.neutral",
+        minWidth: 0,
+      }}
+    >
+      <Typography variant="caption" sx={{ color: "text.secondary" }}>
+        {label}
+      </Typography>
+      <Typography
+        variant="body2"
+        sx={{ fontWeight: 600, wordBreak: "break-word" }}
+      >
+        {value}
+      </Typography>
     </Box>
   );
 }

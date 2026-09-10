@@ -94,7 +94,13 @@ export type Database = {
           nominal_dibayar: number;
           sisa_tagihan: number;
           tanggal_jatuh_tempo: string | null;
-          status: "pending" | "belum_lunas" | "sebagian" | "lunas" | "dibebaskan" | "dibatalkan";
+          status:
+            | "pending"
+            | "belum_lunas"
+            | "sebagian"
+            | "lunas"
+            | "dibebaskan"
+            | "dibatalkan";
           keterangan: string | null;
           created_at: string;
           updated_at: string;
@@ -112,7 +118,13 @@ export type Database = {
           nominal_dibayar?: number;
           sisa_tagihan: number;
           tanggal_jatuh_tempo?: string | null;
-          status?: "pending" | "belum_lunas" | "sebagian" | "lunas" | "dibebaskan" | "dibatalkan";
+          status?:
+            | "pending"
+            | "belum_lunas"
+            | "sebagian"
+            | "lunas"
+            | "dibebaskan"
+            | "dibatalkan";
           keterangan?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -130,7 +142,13 @@ export type Database = {
           nominal_dibayar?: number;
           sisa_tagihan?: number;
           tanggal_jatuh_tempo?: string | null;
-          status?: "pending" | "belum_lunas" | "sebagian" | "lunas" | "dibebaskan" | "dibatalkan";
+          status?:
+            | "pending"
+            | "belum_lunas"
+            | "sebagian"
+            | "lunas"
+            | "dibebaskan"
+            | "dibatalkan";
           keterangan?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -254,9 +272,25 @@ export type Database = {
           alamat_domisili: string | null;
           tanggal_keluar: string | null;
           tahun_ajaran_id: string | null;
-          status: "aktif" | "nonaktif" | "alumni" | "lulus" | "pindah" | "keluar" | "cuti" | null;
+          status:
+            | "aktif"
+            | "nonaktif"
+            | "alumni"
+            | "lulus"
+            | "pindah"
+            | "keluar"
+            | "cuti"
+            | null;
           created_at: string | null;
           updated_at: string | null;
+        };
+      };
+
+      cabang: {
+        Row: {
+          id: string;
+          nama_cabang: string;
+          created_at: string;
         };
       };
     };
@@ -271,7 +305,10 @@ export type Database = {
         Returns: number;
       };
       generate_tagihan_tahun_ajaran_keuangan: {
-        Args: { p_id_tahun_ajaran: string; p_id_jenis_pembayaran?: string | null };
+        Args: {
+          p_id_tahun_ajaran: string;
+          p_id_jenis_pembayaran?: string | null;
+        };
         Returns: number;
       };
       hapus_jenis_pembayaran_keuangan: {

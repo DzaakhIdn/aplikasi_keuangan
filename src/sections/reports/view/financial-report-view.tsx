@@ -49,6 +49,7 @@ const MONTHS = [
 const DEFAULT_FILTERS: FinancialReportFilters = {
   academicYear: "all",
   paymentType: "all",
+  cabang: "all",
   startDate: "",
   endDate: "",
 };
@@ -76,6 +77,11 @@ function filterBills(rows: BillDataRow[], filters: FinancialReportFilters) {
     if (
       filters.paymentType !== "all" &&
       row.jenis_pembayaran_keuangan?.nama_pembayaran !== filters.paymentType
+    )
+      return false;
+    if (
+      filters.cabang !== "all" &&
+      row.siswa?.cabang?.nama_cabang !== filters.cabang
     )
       return false;
     if (
@@ -110,8 +116,10 @@ function formatClassName(row: BillDataRow) {
   const history = row.siswa?.kesiswaan_history?.find(
     (item) => item.tahun_ajaran_id === row.id_tahun_ajaran,
   );
-  const kelas = history?.kelas?.nama_kelas ?? row.siswa?.kelas?.nama_kelas ?? "Tanpa kelas";
-  const rombel = history?.rombel?.rombel ?? row.siswa?.rombel?.rombel ?? "Tanpa rombel";
+  const kelas =
+    history?.kelas?.nama_kelas ?? row.siswa?.kelas?.nama_kelas ?? "Tanpa kelas";
+  const rombel =
+    history?.rombel?.rombel ?? row.siswa?.rombel?.rombel ?? "Tanpa rombel";
   return `${kelas} / ${rombel}`;
 }
 
@@ -159,12 +167,22 @@ function buildStudentStatusSummary(rows: BillDataRow[]) {
     dibebaskan: "#0284C7",
     dibatalkan: "#64748B",
   };
-  const order = ["lunas", "sebagian", "pending", "belum_lunas", "dibebaskan", "dibatalkan"];
-  const studentsByStatus = rows.reduce<Record<string, Set<string>>>((result, row) => {
-    result[row.status] ??= new Set();
-    result[row.status].add(row.id_siswa);
-    return result;
-  }, {});
+  const order = [
+    "lunas",
+    "sebagian",
+    "pending",
+    "belum_lunas",
+    "dibebaskan",
+    "dibatalkan",
+  ];
+  const studentsByStatus = rows.reduce<Record<string, Set<string>>>(
+    (result, row) => {
+      result[row.status] ??= new Set();
+      result[row.status].add(row.id_siswa);
+      return result;
+    },
+    {},
+  );
 
   const series = order
     .map((status) => ({
@@ -206,6 +224,9 @@ export function FinancialReportView() {
   );
   const paymentTypes = uniqueStrings(
     bills.map((row) => row.jenis_pembayaran_keuangan?.nama_pembayaran),
+  );
+  const cabangs = uniqueStrings(
+    bills.map((row) => row.siswa?.cabang?.nama_cabang),
   );
 
   const filteredBills = useMemo(
@@ -328,6 +349,7 @@ export function FinancialReportView() {
           filters={filters}
           academicYears={academicYears}
           paymentTypes={paymentTypes}
+          cabangs={cabangs}
           onChange={handleFilterChange}
           onReset={() => setFilters(DEFAULT_FILTERS)}
         />

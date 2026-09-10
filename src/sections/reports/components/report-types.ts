@@ -19,6 +19,7 @@ export const MONTHS = [
 export type FinancialReportFilters = {
   academicYear: string;
   paymentType: string;
+  cabang: string;
   startDate: string;
   endDate: string;
 };

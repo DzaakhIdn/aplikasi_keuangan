@@ -1,24 +1,21 @@
 import { supabase } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
 
-export type BillStatus = Database["public"]["Tables"]["tagihan_siswa_keuangan"]["Row"]["status"];
+export type BillStatus =
+  Database["public"]["Tables"]["tagihan_siswa_keuangan"]["Row"]["status"];
 
-export type BillDataRow = Database["public"]["Tables"]["tagihan_siswa_keuangan"]["Row"] & {
-  siswa?: {
-    nis: string;
-    nama_lengkap: string;
-    kelas_id?: string | null;
-    rombel_id?: string | null;
-    kelas?: {
-      nama_kelas: string;
-    } | null;
-    rombel?: {
-      rombel: string;
-      kelas: string;
-    } | null;
-    kesiswaan_history?: {
-      tahun_ajaran_id: string;
-      status: string | null;
+export type BillDataRow =
+  Database["public"]["Tables"]["tagihan_siswa_keuangan"]["Row"] & {
+    siswa?: {
+      nis: string;
+      nama_lengkap: string;
+      kelas_id?: string | null;
+      rombel_id?: string | null;
+      cabang_id?: string | null;
+      cabang?: {
+        id: string;
+        nama_cabang: string;
+      } | null;
       kelas?: {
         nama_kelas: string;
       } | null;
@@ -26,17 +23,27 @@ export type BillDataRow = Database["public"]["Tables"]["tagihan_siswa_keuangan"]
         rombel: string;
         kelas: string;
       } | null;
-    }[];
-  } | null;
-  jenis_pembayaran_keuangan?: {
-    kode_jenis_pembayaran: string;
-    nama_pembayaran: string;
-    tipe_pembayaran: "Bulanan" | "Sekali";
-  } | null;
-  tahun_ajaran?: {
-    tahun_ajaran: string;
-  } | null;
-};
+      kesiswaan_history?: {
+        tahun_ajaran_id: string;
+        status: string | null;
+        kelas?: {
+          nama_kelas: string;
+        } | null;
+        rombel?: {
+          rombel: string;
+          kelas: string;
+        } | null;
+      }[];
+    } | null;
+    jenis_pembayaran_keuangan?: {
+      kode_jenis_pembayaran: string;
+      nama_pembayaran: string;
+      tipe_pembayaran: "Bulanan" | "Sekali";
+    } | null;
+    tahun_ajaran?: {
+      tahun_ajaran: string;
+    } | null;
+  };
 
 export const BillsDataRepository = {
   async getAll() {
@@ -50,6 +57,8 @@ export const BillsDataRepository = {
           nama_lengkap,
           kelas_id,
           rombel_id,
+          cabang_id,
+          cabang:cabang(id, nama_cabang),
           kelas:kelas(nama_kelas),
           rombel:rombel(rombel, kelas),
           kesiswaan_history(
