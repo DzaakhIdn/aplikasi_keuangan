@@ -274,6 +274,10 @@ export type Database = {
         Args: { p_id_tahun_ajaran: string; p_id_jenis_pembayaran?: string | null };
         Returns: number;
       };
+      hapus_jenis_pembayaran_keuangan: {
+        Args: { p_id_jenis_pembayaran: string };
+        Returns: Json;
+      };
       catat_pembayaran_keuangan: {
         Args: {
           p_id_siswa: string;

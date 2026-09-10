@@ -64,10 +64,9 @@ export const PaymentRepository = {
   },
 
   async remove(id: string) {
-    const { error } = await supabase
-      .from("jenis_pembayaran_keuangan")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.rpc("hapus_jenis_pembayaran_keuangan", {
+      p_id_jenis_pembayaran: id,
+    });
 
     if (error) throw error;
   },
