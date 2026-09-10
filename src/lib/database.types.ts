@@ -265,12 +265,13 @@ export type Database = {
         Args: {
           p_id_siswa: string;
           p_id_tahun_ajaran?: string | null;
+          p_id_jenis_pembayaran?: string | null;
           p_mulai_tagihan?: string | null;
         };
         Returns: number;
       };
       generate_tagihan_tahun_ajaran_keuangan: {
-        Args: { p_id_tahun_ajaran: string };
+        Args: { p_id_tahun_ajaran: string; p_id_jenis_pembayaran?: string | null };
         Returns: number;
       };
       catat_pembayaran_keuangan: {
