@@ -171,7 +171,7 @@ export function InvoiceListView() {
     [data],
   );
   const cabangOptions = useMemo(
-    () => getUniqueOptions(data, (row) => row.siswa?.cabang?.nama_cabang),
+    () => getUniqueOptions(data, (row) => row.siswa?.cabang_id),
     [data],
   );
   const filteredData = useMemo(() => {
@@ -194,9 +194,7 @@ export function InvoiceListView() {
     }
 
     if (cabang !== "all") {
-      result = result.filter(
-        (row) => row.siswa?.cabang?.nama_cabang === cabang,
-      );
+      result = result.filter((row) => row.siswa?.cabang_id === cabang);
     }
 
     return result;

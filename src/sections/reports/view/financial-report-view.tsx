@@ -79,10 +79,7 @@ function filterBills(rows: BillDataRow[], filters: FinancialReportFilters) {
       row.jenis_pembayaran_keuangan?.nama_pembayaran !== filters.paymentType
     )
       return false;
-    if (
-      filters.cabang !== "all" &&
-      row.siswa?.cabang?.nama_cabang !== filters.cabang
-    )
+    if (filters.cabang !== "all" && row.siswa?.cabang_id !== filters.cabang)
       return false;
     if (
       (filters.startDate || filters.endDate) &&
@@ -225,9 +222,7 @@ export function FinancialReportView() {
   const paymentTypes = uniqueStrings(
     bills.map((row) => row.jenis_pembayaran_keuangan?.nama_pembayaran),
   );
-  const cabangs = uniqueStrings(
-    bills.map((row) => row.siswa?.cabang?.nama_cabang),
-  );
+  const cabangs = uniqueStrings(bills.map((row) => row.siswa?.cabang_id));
 
   const filteredBills = useMemo(
     () => filterBills(bills, filters),

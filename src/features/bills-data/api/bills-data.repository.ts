@@ -12,10 +12,6 @@ export type BillDataRow =
       kelas_id?: string | null;
       rombel_id?: string | null;
       cabang_id?: string | null;
-      cabang?: {
-        id: string;
-        nama_cabang: string;
-      } | null;
       kelas?: {
         nama_kelas: string;
       } | null;
@@ -58,7 +54,6 @@ export const BillsDataRepository = {
           kelas_id,
           rombel_id,
           cabang_id,
-          cabang:cabang(id, nama_cabang),
           kelas:kelas(nama_kelas),
           rombel:rombel(rombel, kelas),
           kesiswaan_history(
