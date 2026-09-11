@@ -141,6 +141,16 @@ function getClassName(row: BillDataRow) {
   );
 }
 
+function getCabangId(row: BillDataRow) {
+  return row.siswa?.cabang_id ?? row.siswa?.cabang?.id ?? "";
+}
+
+function getCabangName(row: BillDataRow) {
+  return (
+    row.siswa?.cabang?.nama_cabang ?? row.siswa?.cabang_id ?? "Tanpa cabang"
+  );
+}
+
 // ----------------------------------------------------------------------
 
 export function InvoiceListView() {
@@ -170,10 +180,17 @@ export function InvoiceListView() {
     () => getUniqueOptions(data, getClassName),
     [data],
   );
-  const cabangOptions = useMemo(
-    () => getUniqueOptions(data, (row) => row.siswa?.cabang_id),
-    [data],
-  );
+  const cabangOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    data.forEach((row) => {
+      const id = getCabangId(row);
+      if (!id) return;
+      if (!map.has(id)) map.set(id, getCabangName(row));
+    });
+    return [...map.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [data]);
   const filteredData = useMemo(() => {
     let result = filterBills(data, keyword, status);
 
@@ -194,7 +211,7 @@ export function InvoiceListView() {
     }
 
     if (cabang !== "all") {
-      result = result.filter((row) => row.siswa?.cabang_id === cabang);
+      result = result.filter((row) => getCabangId(row) === cabang);
     }
 
     return result;
@@ -375,8 +392,8 @@ export function InvoiceListView() {
           >
             <MenuItem value="all">Semua cabang</MenuItem>
             {cabangOptions.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option}
+              <MenuItem key={option.id} value={option.id}>
+                {option.name}
               </MenuItem>
             ))}
           </TextField>

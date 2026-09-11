@@ -58,6 +58,16 @@ function uniqueStrings(values: (string | null | undefined)[]) {
   return [...new Set(values.filter((value): value is string => !!value))];
 }
 
+function getCabangId(row: BillDataRow) {
+  return row.siswa?.cabang_id ?? row.siswa?.cabang?.id ?? "";
+}
+
+function getCabangName(row: BillDataRow) {
+  return (
+    row.siswa?.cabang?.nama_cabang ?? row.siswa?.cabang_id ?? "Tanpa cabang"
+  );
+}
+
 function isWithinDate(date: string, startDate: string, endDate: string) {
   const value = new Date(date).getTime();
   if (startDate && value < new Date(`${startDate}T00:00:00`).getTime())
@@ -79,7 +89,7 @@ function filterBills(rows: BillDataRow[], filters: FinancialReportFilters) {
       row.jenis_pembayaran_keuangan?.nama_pembayaran !== filters.paymentType
     )
       return false;
-    if (filters.cabang !== "all" && row.siswa?.cabang_id !== filters.cabang)
+    if (filters.cabang !== "all" && getCabangId(row) !== filters.cabang)
       return false;
     if (
       (filters.startDate || filters.endDate) &&
@@ -222,7 +232,17 @@ export function FinancialReportView() {
   const paymentTypes = uniqueStrings(
     bills.map((row) => row.jenis_pembayaran_keuangan?.nama_pembayaran),
   );
-  const cabangs = uniqueStrings(bills.map((row) => row.siswa?.cabang_id));
+  const cabangs = useMemo(() => {
+    const map = new Map<string, string>();
+    bills.forEach((row) => {
+      const id = getCabangId(row);
+      if (!id) return;
+      if (!map.has(id)) map.set(id, getCabangName(row));
+    });
+    return [...map.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [bills]);
 
   const filteredBills = useMemo(
     () => filterBills(bills, filters),

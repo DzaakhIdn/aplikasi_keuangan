@@ -12,7 +12,7 @@ type ReportFilterToolbarProps = {
   filters: FinancialReportFilters;
   academicYears: string[];
   paymentTypes: string[];
-  cabangs: string[];
+  cabangs: { id: string; name: string }[];
   onChange: (field: keyof FinancialReportFilters, value: string) => void;
   onReset: () => void;
 };
@@ -51,8 +51,8 @@ export function ReportFilterToolbar({
         >
           <MenuItem value="all">Semua cabang</MenuItem>
           {cabangs.map((cabang) => (
-            <MenuItem key={cabang} value={cabang}>
-              {cabang}
+            <MenuItem key={cabang.id} value={cabang.id}>
+              {cabang.name}
             </MenuItem>
           ))}
         </TextField>
