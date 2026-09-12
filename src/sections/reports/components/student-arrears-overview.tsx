@@ -13,6 +13,8 @@ import TableCell from "@mui/material/TableCell";
 import TableBody from "@mui/material/TableBody";
 import CardHeader from "@mui/material/CardHeader";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 import { fDate } from "@/utils/format-time";
 import { fCurrency } from "@/utils/format-number";
@@ -175,6 +177,8 @@ export function StudentArrearsOverview({
   selected?: StudentArrearsSummary;
   onSelect: (id: string) => void;
 }) {
+  const theme = useTheme();
+  const isWideScreen = useMediaQuery(theme.breakpoints.up("xl"));
   const table = useTable({ defaultRowsPerPage: 10 });
   const visibleRows = rows.slice(
     table.page * table.rowsPerPage,
@@ -304,7 +308,7 @@ export function StudentArrearsOverview({
                   </TableRow>
 
                   <AnimatePresence initial={false}>
-                    {selected?.id === row.id && (
+                    {!isWideScreen && selected?.id === row.id && (
                       <TableRow>
                         <TableCell
                           colSpan={TABLE_HEAD.length}
@@ -363,7 +367,7 @@ export function StudentArrearsOverview({
         />
       </Card>
 
-      {selected && (
+      {isWideScreen && selected && (
         <Card sx={{ minWidth: 0 }}>
           <CardHeader
             title="Detail Tunggakan"
