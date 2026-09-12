@@ -18,7 +18,7 @@ type RawPayment = {
     cabang_id?: string | null;
     cabang?: {
       id: string;
-      nama_cabang: string;
+      cabang: string;
     } | null;
   } | null;
   pembayaran_detail_keuangan?: {
@@ -98,7 +98,7 @@ export const FinancialReportRepository = {
             kelas_id,
             rombel_id,
             cabang_id,
-            cabang:cabang(id, nama_cabang),
+            cabang:cabang(id, cabang),
             kelas:kelas(nama_kelas),
             rombel:rombel(rombel, kelas),
             kesiswaan_history(
@@ -129,7 +129,7 @@ export const FinancialReportRepository = {
             kelas_id,
             rombel_id,
             cabang_id,
-            cabang:cabang(id, nama_cabang),
+            cabang:cabang(id, cabang),
             kelas:kelas(nama_kelas),
             rombel:rombel(rombel, kelas),
             kesiswaan_history(

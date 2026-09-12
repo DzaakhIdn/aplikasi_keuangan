@@ -14,7 +14,7 @@ export type BillDataRow =
       cabang_id?: string | null;
       cabang?: {
         id: string;
-        nama_cabang: string;
+        cabang: string;
       } | null;
       kelas?: {
         nama_kelas: string;
@@ -58,7 +58,7 @@ export const BillsDataRepository = {
           kelas_id,
           rombel_id,
           cabang_id,
-          cabang:cabang(id, nama_cabang),
+          cabang:cabang(id, cabang),
           kelas:kelas(nama_kelas),
           rombel:rombel(rombel, kelas),
           kesiswaan_history(

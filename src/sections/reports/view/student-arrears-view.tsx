@@ -29,7 +29,9 @@ const DEFAULT_FILTERS: StudentArrearsFilters = {
 };
 
 function uniqueStrings(values: (string | null | undefined)[]) {
-  return [...new Set(values.filter((value): value is string => !!value))].sort();
+  return [
+    ...new Set(values.filter((value): value is string => !!value)),
+  ].sort();
 }
 
 function getRombelName(row: BillDataRow) {
@@ -40,31 +42,36 @@ function getRombelName(row: BillDataRow) {
 }
 
 function buildStudentArrears(rows: BillDataRow[]): StudentArrearsSummary[] {
-  const groups = rows.reduce<Record<string, StudentArrearsSummary>>((result, row) => {
-    if (row.sisa_tagihan <= 0) return result;
+  const groups = rows.reduce<Record<string, StudentArrearsSummary>>(
+    (result, row) => {
+      if (row.sisa_tagihan <= 0) return result;
 
-    result[row.id_siswa] ??= {
-      id: row.id_siswa,
-      nis: row.siswa?.nis ?? "-",
-      name: row.siswa?.nama_lengkap ?? "Tanpa nama",
-      rombel: getRombelName(row),
-      total: 0,
-      paid: 0,
-      remaining: 0,
-      percentage: 0,
-      bills: [],
-    };
-    result[row.id_siswa].total += row.nominal_tagihan;
-    result[row.id_siswa].paid += row.nominal_dibayar;
-    result[row.id_siswa].remaining += row.sisa_tagihan;
-    result[row.id_siswa].bills.push(row);
-    return result;
-  }, {});
+      result[row.id_siswa] ??= {
+        id: row.id_siswa,
+        nis: row.siswa?.nis ?? "-",
+        name: row.siswa?.nama_lengkap ?? "Tanpa nama",
+        rombel: getRombelName(row),
+        total: 0,
+        paid: 0,
+        remaining: 0,
+        percentage: 0,
+        bills: [],
+      };
+      result[row.id_siswa].total += row.nominal_tagihan;
+      result[row.id_siswa].paid += row.nominal_dibayar;
+      result[row.id_siswa].remaining += row.sisa_tagihan;
+      result[row.id_siswa].bills.push(row);
+      return result;
+    },
+    {},
+  );
 
   return Object.values(groups)
     .map((student) => ({
       ...student,
-      percentage: student.total ? Math.min((student.paid / student.total) * 100, 100) : 0,
+      percentage: student.total
+        ? Math.min((student.paid / student.total) * 100, 100)
+        : 0,
       bills: student.bills.sort((a, b) =>
         String(a.tanggal_jatuh_tempo ?? a.created_at).localeCompare(
           String(b.tanggal_jatuh_tempo ?? b.created_at),
@@ -76,11 +83,14 @@ function buildStudentArrears(rows: BillDataRow[]): StudentArrearsSummary[] {
 
 export function StudentArrearsView() {
   const { data, isLoading } = useQuery(financialReportQueries.overview());
-  const [filters, setFilters] = useState<StudentArrearsFilters>(DEFAULT_FILTERS);
+  const [filters, setFilters] =
+    useState<StudentArrearsFilters>(DEFAULT_FILTERS);
   const [selectedStudentId, setSelectedStudentId] = useState<string>();
   const bills = data?.bills ?? [];
 
-  const academicYears = uniqueStrings(bills.map((row) => row.tahun_ajaran?.tahun_ajaran));
+  const academicYears = uniqueStrings(
+    bills.map((row) => row.tahun_ajaran?.tahun_ajaran),
+  );
   const paymentTypes = uniqueStrings(
     bills.map((row) => row.jenis_pembayaran_keuangan?.nama_pembayaran),
   );
@@ -99,7 +109,8 @@ export function StudentArrearsView() {
           row.jenis_pembayaran_keuangan?.nama_pembayaran !== filters.paymentType
         )
           return false;
-        if (filters.class !== "all" && getRombelName(row) !== filters.class) return false;
+        if (filters.class !== "all" && getRombelName(row) !== filters.class)
+          return false;
         if (
           filters.months !== "all" &&
           row.periode_bulan !== MONTHS.indexOf(filters.months) + 1
@@ -110,12 +121,26 @@ export function StudentArrearsView() {
     [bills, filters],
   );
 
-  const students = useMemo(() => buildStudentArrears(filteredBills), [filteredBills]);
-  const selectedStudent = students.find((student) => student.id === selectedStudentId);
-  const totalArrears = students.reduce((total, student) => total + student.remaining, 0);
-  const totalBills = students.reduce((total, student) => total + student.bills.length, 0);
+  const students = useMemo(
+    () => buildStudentArrears(filteredBills),
+    [filteredBills],
+  );
+  const selectedStudent = students.find(
+    (student) => student.id === selectedStudentId,
+  );
+  const totalArrears = students.reduce(
+    (total, student) => total + student.remaining,
+    0,
+  );
+  const totalBills = students.reduce(
+    (total, student) => total + student.bills.length,
+    0,
+  );
 
-  const handleFilterChange = (field: keyof StudentArrearsFilters, value: string) => {
+  const handleFilterChange = (
+    field: keyof StudentArrearsFilters,
+    value: string,
+  ) => {
     setFilters((current) => ({ ...current, [field]: value }));
     setSelectedStudentId(undefined);
   };
@@ -139,7 +164,11 @@ export function StudentArrearsView() {
         sx={{ mb: { xs: 3, md: 5 }, "@media print": { display: "none" } }}
         action={
           <Box sx={{ display: "flex", gap: 1 }}>
-            <Button variant="contained" color="success" startIcon={<Iconify icon="solar:export-bold" />}>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<Iconify icon="solar:export-bold" />}
+            >
               Export Excel
             </Button>
             <Button
@@ -171,7 +200,11 @@ export function StudentArrearsView() {
           display: "grid",
           gap: 2,
           mb: 3,
-          gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" },
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(2, 1fr)",
+            lg: "repeat(3, 1fr)",
+          },
         }}
       >
         <ReportSummaryCard
@@ -201,7 +234,9 @@ export function StudentArrearsView() {
         rows={students}
         loading={isLoading}
         selected={selectedStudent}
-        onSelect={(id) => setSelectedStudentId((current) => (current === id ? undefined : id))}
+        onSelect={(id) =>
+          setSelectedStudentId((current) => (current === id ? undefined : id))
+        }
       />
     </DashboardContent>
   );

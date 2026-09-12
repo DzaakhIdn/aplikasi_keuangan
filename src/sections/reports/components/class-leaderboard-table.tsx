@@ -50,8 +50,12 @@ export function ClassLeaderboardTable({
           color="warning.main"
         />
         <Box>
-          <Typography variant="h5">Leaderboard Pembayaran Per-Rombel</Typography>
-          <Typography variant="body1">Peringkat persentase pembayaran rombel</Typography>
+          <Typography variant="h5">
+            Leaderboard Pembayaran Per-Rombel
+          </Typography>
+          <Typography variant="body1">
+            Peringkat persentase pembayaran rombel
+          </Typography>
         </Box>
       </Stack>
 
@@ -82,7 +86,9 @@ export function ClassLeaderboardTable({
                     </Box>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="subtitle2">Kelas {row.name}</Typography>
+                    <Typography variant="subtitle2">
+                      Kelas {row.name}
+                    </Typography>
                     <Typography
                       variant="caption"
                       sx={{ color: "text.secondary" }}

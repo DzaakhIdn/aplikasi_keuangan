@@ -289,7 +289,7 @@ export type Database = {
       cabang: {
         Row: {
           id: string;
-          nama_cabang: string;
+          cabang: string;
           created_at: string;
         };
       };

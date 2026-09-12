@@ -26,7 +26,9 @@ const DEFAULT_FILTERS: ClassPercentageFilters = {
 };
 
 function uniqueStrings(values: (string | null | undefined)[]) {
-  return [...new Set(values.filter((value): value is string => !!value))].sort();
+  return [
+    ...new Set(values.filter((value): value is string => !!value)),
+  ].sort();
 }
 
 function getRombelName(row: BillDataRow) {
@@ -38,7 +40,15 @@ function getRombelName(row: BillDataRow) {
 
 function buildClassSummary(rows: BillDataRow[]): ClassPaymentSummary[] {
   const groups = rows.reduce<
-    Record<string, { total: number; paid: number; remaining: number; students: Record<string, number> }>
+    Record<
+      string,
+      {
+        total: number;
+        paid: number;
+        remaining: number;
+        students: Record<string, number>;
+      }
+    >
   >((result, row) => {
     const name = getRombelName(row);
     result[name] ??= { total: 0, paid: 0, remaining: 0, students: {} };
@@ -53,7 +63,9 @@ function buildClassSummary(rows: BillDataRow[]): ClassPaymentSummary[] {
   return Object.entries(groups)
     .map(([name, group]) => {
       const balances = Object.values(group.students);
-      const paidStudents = balances.filter((remaining) => remaining <= 0).length;
+      const paidStudents = balances.filter(
+        (remaining) => remaining <= 0,
+      ).length;
 
       return {
         name,
@@ -63,7 +75,9 @@ function buildClassSummary(rows: BillDataRow[]): ClassPaymentSummary[] {
         paidStudents,
         unpaidStudents: balances.length - paidStudents,
         totalStudents: balances.length,
-        percentage: group.total ? Math.min((group.paid / group.total) * 100, 100) : 0,
+        percentage: group.total
+          ? Math.min((group.paid / group.total) * 100, 100)
+          : 0,
       };
     })
     .sort((a, b) => b.percentage - a.percentage);
@@ -71,10 +85,13 @@ function buildClassSummary(rows: BillDataRow[]): ClassPaymentSummary[] {
 
 export function ClassPercentageView() {
   const { data, isLoading } = useQuery(financialReportQueries.overview());
-  const [filters, setFilters] = useState<ClassPercentageFilters>(DEFAULT_FILTERS);
+  const [filters, setFilters] =
+    useState<ClassPercentageFilters>(DEFAULT_FILTERS);
   const bills = data?.bills ?? [];
 
-  const academicYears = uniqueStrings(bills.map((row) => row.tahun_ajaran?.tahun_ajaran));
+  const academicYears = uniqueStrings(
+    bills.map((row) => row.tahun_ajaran?.tahun_ajaran),
+  );
   const paymentTypes = uniqueStrings(
     bills.map((row) => row.jenis_pembayaran_keuangan?.nama_pembayaran),
   );
@@ -93,15 +110,22 @@ export function ClassPercentageView() {
           row.jenis_pembayaran_keuangan?.nama_pembayaran !== filters.paymentType
         )
           return false;
-        if (filters.class !== "all" && getRombelName(row) !== filters.class) return false;
+        if (filters.class !== "all" && getRombelName(row) !== filters.class)
+          return false;
         return true;
       }),
     [bills, filters],
   );
 
-  const classSummary = useMemo(() => buildClassSummary(filteredBills), [filteredBills]);
+  const classSummary = useMemo(
+    () => buildClassSummary(filteredBills),
+    [filteredBills],
+  );
 
-  const handleFilterChange = (field: keyof ClassPercentageFilters, value: string) => {
+  const handleFilterChange = (
+    field: keyof ClassPercentageFilters,
+    value: string,
+  ) => {
     setFilters((current) => ({ ...current, [field]: value }));
   };
 

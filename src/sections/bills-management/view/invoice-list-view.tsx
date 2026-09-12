@@ -147,7 +147,7 @@ function getCabangId(row: BillDataRow) {
 
 function getCabangName(row: BillDataRow) {
   return (
-    row.siswa?.cabang?.nama_cabang ?? row.siswa?.cabang_id ?? "Tanpa cabang"
+    row.siswa?.cabang?.cabang ?? row.siswa?.cabang_id ?? "Tanpa cabang"
   );
 }
 
