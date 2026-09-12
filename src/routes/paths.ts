@@ -13,4 +13,5 @@ export const paths = {
     studentArrears: 'reports/student-arrears',
     alumniArrears: 'reports/alumni-arrears',
     canceledTransaction: 'reports/canceled-transaction',
+    messageTemplate: 'administration/message-template',
 }

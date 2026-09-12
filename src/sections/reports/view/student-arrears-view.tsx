@@ -57,7 +57,7 @@ function buildStudentArrears(rows: BillDataRow[]): StudentArrearsSummary[] {
         percentage: 0,
         bills: [],
       };
-      result[row.id_siswa].total += row.nominal_tagihan;
+      result[row.id_siswa].total += row.nominal_awal;
       result[row.id_siswa].paid += row.nominal_dibayar;
       result[row.id_siswa].remaining += row.sisa_tagihan;
       result[row.id_siswa].bills.push(row);

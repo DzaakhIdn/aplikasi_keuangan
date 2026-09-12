@@ -16,6 +16,7 @@ import BillsDataPage from "./pages/bills-management/bills-data";
 import FinancialReportPage from "./pages/reports/financial-reports";
 import ClassPercentagePage from "./pages/reports/class-percentage";
 import StudentArrearsPage from "./pages/reports/student-arrears";
+import MessageTemplatePage from "./pages/administration/message-template";
 
 // ----------------------------------------------------------------------
 
@@ -68,6 +69,10 @@ const router = createBrowserRouter([
           {
             path: "reports/student-arrears",
             element: <StudentArrearsPage />,
+          },
+          {
+            path: "administration/message-template",
+            element: <MessageTemplatePage />,
           },
         ],
       },

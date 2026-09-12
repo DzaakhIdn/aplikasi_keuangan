@@ -5,6 +5,7 @@ import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Avatar from "@mui/material/Avatar";
 import Drawer from "@mui/material/Drawer";
+import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import MenuList from "@mui/material/MenuList";
 import MenuItem from "@mui/material/MenuItem";
@@ -19,6 +20,9 @@ import { AnimateBorder } from "./animate/animate-border";
 import { AccountButton } from "./account-button";
 import { SignOutButton } from "./sign-out-button";
 import { useAuth } from "@/auth/context/auth-context";
+import { toast } from "@/components/snackbar";
+import { ConfirmDialog } from "@/components/custom-dialog";
+import { useResetPaymentData } from "@/features/payment-reset/api/payment-reset.mutation";
 // ----------------------------------------------------------------------
 
 interface AdminUser {
@@ -72,9 +76,23 @@ export function AccountDrawer({
   const [open, setOpen] = useState(false);
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const onClose = () => setOpen(false);
   const onOpen = () => setOpen(true);
   const { user } = useAuth();
+  const resetPaymentData = useResetPaymentData();
+
+  const handleResetPaymentData = () => {
+    resetPaymentData.mutate(undefined, {
+      onSuccess: (result) => {
+        toast.success(
+          `Reset berhasil: ${result.tagihan_siswa_keuangan} tagihan, ${result.pembayaran_keuangan} pembayaran dihapus`,
+        );
+        setResetDialogOpen(false);
+      },
+      onError: (error: Error) => toast.error(error.message),
+    });
+  };
 
   // Fetch complete admin user data
   useEffect(() => {
@@ -299,9 +317,36 @@ export function AccountDrawer({
         </Scrollbar>
 
         <Box sx={{ p: 2.5 }}>
+          <Button
+            fullWidth
+            color="error"
+            variant="outlined"
+            onClick={() => setResetDialogOpen(true)}
+            startIcon={<Iconify icon="solar:restart-bold" />}
+            sx={{ mb: 1.5 }}
+          >
+            Reset Data Pembayaran
+          </Button>
           <SignOutButton onClose={onClose} />
         </Box>
       </Drawer>
+
+      <ConfirmDialog
+        open={resetDialogOpen}
+        onClose={() => setResetDialogOpen(false)}
+        title="Reset data pembayaran?"
+        content="Aksi ini akan menghapus semua data tagihan, transaksi pembayaran, dan detail pembayaran. Data master seperti santri, tahun ajaran, jenis pembayaran, dan keringanan biaya tidak akan dihapus."
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleResetPaymentData}
+            disabled={resetPaymentData.isPending}
+          >
+            {resetPaymentData.isPending ? "Mereset..." : "Reset Data"}
+          </Button>
+        }
+      />
     </>
   );
 }

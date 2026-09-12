@@ -52,7 +52,7 @@ function buildClassSummary(rows: BillDataRow[]): ClassPaymentSummary[] {
   >((result, row) => {
     const name = getRombelName(row);
     result[name] ??= { total: 0, paid: 0, remaining: 0, students: {} };
-    result[name].total += row.nominal_tagihan;
+    result[name].total += row.nominal_awal;
     result[name].paid += row.nominal_dibayar;
     result[name].remaining += row.sisa_tagihan;
     result[name].students[row.id_siswa] =

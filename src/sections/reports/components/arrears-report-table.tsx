@@ -159,7 +159,7 @@ export function ArrearsReportTable({
               >
                 <InfoBox
                   label="Tagihan"
-                  value={fCurrency(row.nominal_tagihan)}
+                  value={fCurrency(row.nominal_awal)}
                 />
                 <InfoBox label="Sisa" value={fCurrency(row.sisa_tagihan)} />
               </Box>
@@ -205,7 +205,7 @@ export function ArrearsReportTable({
                   {row.jenis_pembayaran_keuangan?.nama_pembayaran ?? "-"}
                 </TableCell>
                 <TableCell>{formatPeriod(row)}</TableCell>
-                <TableCell>{fCurrency(row.nominal_tagihan)}</TableCell>
+                <TableCell>{fCurrency(row.nominal_awal)}</TableCell>
                 <TableCell>{fCurrency(row.nominal_dibayar)}</TableCell>
                 <TableCell sx={{ color: "error.main", fontWeight: 600 }}>
                   {fCurrency(row.sisa_tagihan)}

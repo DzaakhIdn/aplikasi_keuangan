@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import Box from "@mui/material/Box";
@@ -10,6 +10,9 @@ import Stack from "@mui/material/Stack";
 import Avatar from "@mui/material/Avatar";
 import Divider from "@mui/material/Divider";
 import Tooltip from "@mui/material/Tooltip";
+import Dialog from "@mui/material/Dialog";
+import Button from "@mui/material/Button";
+import Radio from "@mui/material/Radio";
 import TableRow from "@mui/material/TableRow";
 import Checkbox from "@mui/material/Checkbox";
 import TableCell from "@mui/material/TableCell";
@@ -17,8 +20,13 @@ import TextField from "@mui/material/TextField";
 import TableBody from "@mui/material/TableBody";
 import IconButton from "@mui/material/IconButton";
 import MenuItem from "@mui/material/MenuItem";
+import RadioGroup from "@mui/material/RadioGroup";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
 import { useTheme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import TableContainer from "@mui/material/TableContainer";
 import InputAdornment from "@mui/material/InputAdornment";
 
@@ -38,6 +46,12 @@ import {
   useTable,
 } from "@/components/table";
 import { billsDataQueries } from "@/features/bills-data/api/bills-data.queries";
+import {
+  createWhatsAppUrl,
+  getBillingMessageTemplate,
+  normalizeWhatsAppNumber,
+  renderBillingMessage,
+} from "@/features/billing-message/message-template";
 import type {
   BillDataRow,
   BillStatus,
@@ -66,6 +80,7 @@ const TABLE_HEAD = [
   { id: "jenis", label: "JENIS PEMBAYARAN", width: 220 },
   { id: "periode", label: "PERIODE", width: 140 },
   { id: "tagihan", label: "TAGIHAN", width: 140 },
+  { id: "potongan", label: "POTONGAN", width: 140 },
   { id: "dibayar", label: "DIBAYAR", width: 140 },
   { id: "sisa", label: "SISA", width: 140 },
   { id: "jatuh_tempo", label: "JATUH TEMPO", width: 140 },
@@ -151,6 +166,36 @@ function getCabangName(row: BillDataRow) {
   );
 }
 
+function getGuardianOptions(row: BillDataRow) {
+  return (row.siswa?.kesiswaan_wali ?? []).flatMap((relation) => {
+    const wali = relation.wali_santri;
+    if (!wali) return [];
+
+    return [
+      { label: "Ayah", name: wali.nama_ayah, phoneRaw: wali.no_hp_ayah },
+      { label: "Ibu", name: wali.nama_ibu, phoneRaw: wali.no_hp_ibu },
+      { label: "Wali", name: wali.nama_wali, phoneRaw: wali.no_hp_wali },
+    ]
+      .map((item) => ({
+        ...item,
+        relation: relation.hubungan,
+        isPrimary: relation.is_primary,
+        phone: normalizeWhatsAppNumber(item.phoneRaw),
+      }))
+      .filter((item) => item.name && item.phone);
+  });
+}
+
+function getStudentOutstandingBills(rows: BillDataRow[], row: BillDataRow) {
+  return rows
+    .filter((item) => item.id_siswa === row.id_siswa && item.sisa_tagihan > 0)
+    .sort((a, b) =>
+      String(a.tanggal_jatuh_tempo ?? a.created_at).localeCompare(
+        String(b.tanggal_jatuh_tempo ?? b.created_at),
+      ),
+    );
+}
+
 // ----------------------------------------------------------------------
 
 export function InvoiceListView() {
@@ -163,6 +208,7 @@ export function InvoiceListView() {
   const [academicYear, setAcademicYear] = useState("all");
   const [className, setClassName] = useState("all");
   const [cabang, setCabang] = useState("all");
+  const [messageRow, setMessageRow] = useState<BillDataRow | null>(null);
 
   const paymentTypeOptions = useMemo(
     () =>
@@ -220,6 +266,10 @@ export function InvoiceListView() {
     table.page * table.rowsPerPage,
     table.page * table.rowsPerPage + table.rowsPerPage,
   );
+  const messageBills = useMemo(
+    () => (messageRow ? getStudentOutstandingBills(data, messageRow) : []),
+    [data, messageRow],
+  );
   const paidRows = filteredData.filter((row) => row.status === "lunas");
   const totalPaidSuccess = paidRows.reduce(
     (total, row) => total + row.nominal_dibayar,
@@ -232,7 +282,7 @@ export function InvoiceListView() {
   const getStatusRows = (value: BillStatus) =>
     data.filter((row) => row.status === value);
   const getStatusAmount = (value: BillStatus) =>
-    getStatusRows(value).reduce((total, row) => total + row.nominal_tagihan, 0);
+    getStatusRows(value).reduce((total, row) => total + row.nominal_awal, 0);
   const getStatusPercent = (value: BillStatus) =>
     data.length ? (getStatusRows(value).length / data.length) * 100 : 0;
 
@@ -245,10 +295,11 @@ export function InvoiceListView() {
   };
 
   return (
-    <DashboardContent
-      maxWidth={false}
-      sx={{ borderTop: "solid 1px rgba(145, 158, 171, 0.12)", pt: 3 }}
-    >
+    <>
+      <DashboardContent
+        maxWidth={false}
+        sx={{ borderTop: "solid 1px rgba(145, 158, 171, 0.12)", pt: 3 }}
+      >
       <CustomBreadcrumbs
         heading="Data Tagihan"
         links={[
@@ -460,6 +511,7 @@ export function InvoiceListView() {
               row={row}
               selected={table.selected.includes(row.id)}
               onSelect={() => table.onSelectRow(row.id)}
+              onSendMessage={() => setMessageRow(row)}
             />
           ))}
           <TableNoData notFound={!isLoading && !filteredData.length} />
@@ -488,7 +540,7 @@ export function InvoiceListView() {
           <TableContainer
             sx={{ display: { xs: "none", md: "block" }, overflowX: "auto" }}
           >
-            <Table sx={{ minWidth: 1180 }}>
+            <Table sx={{ minWidth: 1320 }}>
               <TableHeadCustom
                 headCells={TABLE_HEAD}
                 rowCount={filteredData.length}
@@ -535,7 +587,15 @@ export function InvoiceListView() {
                         </Typography>
                       </TableCell>
                       <TableCell>{formatPeriod(row)}</TableCell>
-                      <TableCell>{fCurrency(row.nominal_tagihan)}</TableCell>
+                      <TableCell>{fCurrency(row.nominal_awal)}</TableCell>
+                      <TableCell>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: row.nominal_potongan > 0 ? "success.main" : "text.secondary", fontWeight: row.nominal_potongan > 0 ? 600 : 400 }}
+                        >
+                          {fCurrency(row.nominal_potongan)}
+                        </Typography>
+                      </TableCell>
                       <TableCell>{fCurrency(row.nominal_dibayar)}</TableCell>
                       <TableCell>{fCurrency(row.sisa_tagihan)}</TableCell>
                       <TableCell>
@@ -549,7 +609,7 @@ export function InvoiceListView() {
                         </Label>
                       </TableCell>
                       <TableCell align="right">
-                        <BillActions row={row} />
+                        <BillActions row={row} onSendMessage={() => setMessageRow(row)} />
                       </TableCell>
                     </TableRow>
                   );
@@ -570,7 +630,14 @@ export function InvoiceListView() {
           onRowsPerPageChange={table.onChangeRowsPerPage}
         />
       </Card>
-    </DashboardContent>
+      </DashboardContent>
+      <BillMessageDialog
+        open={!!messageRow}
+        row={messageRow}
+        bills={messageBills}
+        onClose={() => setMessageRow(null)}
+      />
+    </>
   );
 }
 
@@ -578,10 +645,12 @@ function BillMobileCard({
   row,
   selected,
   onSelect,
+  onSendMessage,
 }: {
   row: BillDataRow;
   selected: boolean;
   onSelect: () => void;
+  onSendMessage: () => void;
 }) {
   const statusConfig = getStatusConfig(row.status);
 
@@ -616,7 +685,7 @@ function BillMobileCard({
             <Label variant="soft" color={statusConfig.color}>
               {statusConfig.label}
             </Label>
-            <BillActions row={row} />
+            <BillActions row={row} onSendMessage={onSendMessage} />
           </Stack>
         </Stack>
 
@@ -631,7 +700,8 @@ function BillMobileCard({
         </Box>
 
         <Box sx={{ display: "grid", gap: 1, gridTemplateColumns: "1fr 1fr" }}>
-          <AmountInfo label="Tagihan" value={fCurrency(row.nominal_tagihan)} />
+          <AmountInfo label="Tagihan" value={fCurrency(row.nominal_awal)} />
+          <AmountInfo label="Potongan" value={fCurrency(row.nominal_potongan)} />
           <AmountInfo label="Dibayar" value={fCurrency(row.nominal_dibayar)} />
           <AmountInfo label="Sisa" value={fCurrency(row.sisa_tagihan)} />
           <AmountInfo
@@ -671,14 +741,138 @@ function StudentCell({ row }: { row: BillDataRow }) {
   );
 }
 
-function BillActions({ row }: { row: BillDataRow }) {
+function BillActions({ row, onSendMessage }: { row: BillDataRow; onSendMessage: () => void }) {
   return (
-    <IconButton
-      onClick={() => undefined}
-      aria-label={`Aksi tagihan ${row.siswa?.nama_lengkap ?? row.id}`}
-    >
-      <Iconify icon="eva:more-vertical-fill" />
-    </IconButton>
+    <Tooltip title="Kirim tagihan WhatsApp">
+      <IconButton
+        color="success"
+        onClick={onSendMessage}
+        aria-label={`Kirim tagihan ${row.siswa?.nama_lengkap ?? row.id}`}
+      >
+        <Iconify icon="solar:chat-round-call-bold-duotone" />
+      </IconButton>
+    </Tooltip>
+  );
+}
+
+function BillMessageDialog({
+  open,
+  row,
+  bills,
+  onClose,
+}: {
+  open: boolean;
+  row: BillDataRow | null;
+  bills: BillDataRow[];
+  onClose: () => void;
+}) {
+  const recipients = useMemo(() => (row ? getGuardianOptions(row) : []), [row]);
+  const [recipientPhone, setRecipientPhone] = useState("");
+
+  useEffect(() => {
+    setRecipientPhone(recipients[0]?.phone ?? "");
+  }, [recipients]);
+
+  const message = useMemo(() => {
+    if (!row) return "";
+
+    return renderBillingMessage(getBillingMessageTemplate(), {
+      studentName: row.siswa?.nama_lengkap ?? "Santri",
+      studentNis: row.siswa?.nis ?? "-",
+      bills: bills.map((bill) => ({
+        name: bill.jenis_pembayaran_keuangan?.nama_pembayaran ?? "Tagihan",
+        period: formatPeriod(bill),
+        amount: bill.sisa_tagihan,
+      })),
+    });
+  }, [bills, row]);
+
+  const selectedPhone = recipientPhone || recipients[0]?.phone || "";
+
+  const handleSend = () => {
+    if (!selectedPhone) return;
+    window.open(createWhatsAppUrl(selectedPhone, message), "_blank", "noopener,noreferrer");
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>Kirim Pesan Tagihan</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2.5} sx={{ pt: 1 }}>
+          <Box>
+            <Typography variant="subtitle2">
+              {row?.siswa?.nama_lengkap ?? "Santri"}
+            </Typography>
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+              {bills.length} tagihan dengan sisa {fCurrency(bills.reduce((total, bill) => total + bill.sisa_tagihan, 0))}
+            </Typography>
+          </Box>
+
+          <Box>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Pilih penerima
+            </Typography>
+            {recipients.length ? (
+              <RadioGroup
+                value={selectedPhone}
+                onChange={(event) => setRecipientPhone(event.target.value)}
+              >
+                {recipients.map((recipient) => (
+                  <FormControlLabel
+                    key={`${recipient.label}-${recipient.phone}`}
+                    value={recipient.phone}
+                    control={<Radio />}
+                    label={`${recipient.label} - ${recipient.name} (${recipient.phoneRaw})${recipient.isPrimary ? " · utama" : ""}`}
+                  />
+                ))}
+              </RadioGroup>
+            ) : (
+              <Typography variant="body2" sx={{ color: "error.main" }}>
+                Nomor wali santri belum tersedia.
+              </Typography>
+            )}
+          </Box>
+
+          <Box>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Preview pesan
+            </Typography>
+            <Box
+              component="pre"
+              sx={{
+                m: 0,
+                p: 2,
+                borderRadius: 2,
+                bgcolor: "background.neutral",
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                fontFamily: "inherit",
+                typography: "body2",
+                maxHeight: 360,
+                overflow: "auto",
+              }}
+            >
+              {message}
+            </Box>
+          </Box>
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button color="inherit" onClick={onClose}>
+          Batal
+        </Button>
+        <Button
+          variant="contained"
+          color="success"
+          disabled={!selectedPhone || !bills.length}
+          onClick={handleSend}
+          startIcon={<Iconify icon="solar:chat-round-call-bold-duotone" />}
+        >
+          Kirim via WhatsApp
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }
 

@@ -125,7 +125,7 @@ function BillDetailItem({ bill }: { bill: BillDataRow }) {
             variant="caption"
             sx={{ display: "block", fontWeight: 700 }}
           >
-            {fCurrency(bill.nominal_tagihan)}
+            {fCurrency(bill.nominal_awal)}
           </Typography>
         </Box>
         <Box sx={{ p: 1.25, borderRadius: 1, bgcolor: "background.neutral" }}>

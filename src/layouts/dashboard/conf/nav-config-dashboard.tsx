@@ -66,6 +66,11 @@ export const navData = [
         path: paths.feeWaiver,
         icon: ICONS.money,
       },
+      {
+        title: "Template Pesan",
+        path: paths.messageTemplate,
+        icon: ICONS.template,
+      },
     ],
   },
   {
@@ -122,7 +127,7 @@ export const navData = [
         icon: ICONS.admin,
         children: [
           { title: "Pengguna", path: "" },
-          { title: "Setting", path: "" },
+          { title: "Template Pesan", path: paths.messageTemplate },
         ],
         allowedRoles: ["admin", "admin_ikhwan", "admin_akhwat"],
         caption: "Only admin can see this item.",

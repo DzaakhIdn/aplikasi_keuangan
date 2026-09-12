@@ -136,7 +136,7 @@ function buildPaymentBreakdown(rows: BillDataRow[]): PaymentBreakdown[] {
       const name =
         row.jenis_pembayaran_keuangan?.nama_pembayaran ?? "Tanpa jenis";
       result[name] ??= { name, total: 0, paid: 0, remaining: 0 };
-      result[name].total += row.nominal_tagihan;
+      result[name].total += row.nominal_awal;
       result[name].paid += row.nominal_dibayar;
       result[name].remaining += row.sisa_tagihan;
       return result;
@@ -149,7 +149,7 @@ function buildClassBreakdown(rows: BillDataRow[]): ClassBreakdown[] {
     rows.reduce<Record<string, ClassBreakdown>>((result, row) => {
       const name = formatClassName(row);
       result[name] ??= { name, total: 0, paid: 0, remaining: 0 };
-      result[name].total += row.nominal_tagihan;
+      result[name].total += row.nominal_awal;
       result[name].paid += row.nominal_dibayar;
       result[name].remaining += row.sisa_tagihan;
       return result;
@@ -266,7 +266,7 @@ export function FinancialReportView() {
     0,
   );
   const totalBills = filteredBills.reduce(
-    (total, row) => total + row.nominal_tagihan,
+    (total, row) => total + row.nominal_awal,
     0,
   );
   const totalArrears = arrearsRows.reduce(
@@ -275,7 +275,7 @@ export function FinancialReportView() {
   );
   const pendingAmount = filteredBills
     .filter((row) => row.status === "pending")
-    .reduce((total, row) => total + row.nominal_tagihan, 0);
+    .reduce((total, row) => total + row.nominal_awal, 0);
   const unpaidStudents = new Set(arrearsRows.map((row) => row.id_siswa)).size;
 
   const monthlyIncome = MONTHS.map((month, index) => ({

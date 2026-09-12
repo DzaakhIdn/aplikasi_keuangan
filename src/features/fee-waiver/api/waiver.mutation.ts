@@ -2,6 +2,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { WaiverRepository } from "./waiver.repository";
 import { feeWaiverKeys } from "./waiver.keys";
+import { billsDataKeys } from "@/features/bills-data/api/bills-data.keys";
+import { paymentCounterKeys } from "@/features/payment-counter/api/payment-counter.keys";
+import { financialReportKeys } from "@/features/financial-report/api/financial-report.keys";
+
+function invalidateAffectedBillQueries(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: billsDataKeys.lists() });
+  queryClient.invalidateQueries({ queryKey: paymentCounterKeys.all });
+  queryClient.invalidateQueries({ queryKey: financialReportKeys.overview() });
+}
 
 export function useCreateWaiver() {
   const queryClient = useQueryClient();
@@ -13,6 +22,7 @@ export function useCreateWaiver() {
       queryClient.invalidateQueries({
         queryKey: feeWaiverKeys.lists(),
       });
+      invalidateAffectedBillQueries(queryClient);
     },
   });
 }
@@ -36,6 +46,7 @@ export function useUpdateWaiver() {
       queryClient.invalidateQueries({
         queryKey: feeWaiverKeys.detail(data.id),
       });
+      invalidateAffectedBillQueries(queryClient);
     },
   });
 }
@@ -50,6 +61,7 @@ export function useDeleteWaiver() {
       queryClient.invalidateQueries({
         queryKey: feeWaiverKeys.lists(),
       });
+      invalidateAffectedBillQueries(queryClient);
     },
   });
 }

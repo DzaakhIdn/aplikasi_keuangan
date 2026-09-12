@@ -47,6 +47,7 @@ const TABLE_HEAD = [
   { id: "jenis", label: "Jenis Pembayaran", width: 240 },
   { id: "periode", label: "Periode", width: 140 },
   { id: "tagihan", label: "Tagihan", width: 140 },
+  { id: "potongan", label: "Potongan", width: 140 },
   { id: "dibayar", label: "Sudah Dibayar", width: 140 },
   { id: "sisa", label: "Sisa", width: 140 },
   { id: "nominal", label: "Nominal Bayar", width: 180 },
@@ -528,7 +529,8 @@ export function PaymentCounterView() {
                       </Stack>
 
                       <Box sx={{ display: "grid", gap: 1, gridTemplateColumns: "1fr 1fr" }}>
-                        <AmountInfo label="Tagihan" value={formatCurrency(bill.nominal_tagihan)} />
+                        <AmountInfo label="Tagihan" value={formatCurrency(bill.nominal_awal)} />
+                        <AmountInfo label="Potongan" value={formatCurrency(bill.nominal_potongan)} />
                         <AmountInfo label="Sisa" value={formatCurrency(bill.sisa_tagihan)} />
                       </Box>
 
@@ -567,7 +569,7 @@ export function PaymentCounterView() {
             </Stack>
 
             <Scrollbar sx={{ display: { xs: "none", md: "block" }, width: 1 }}>
-              <Table sx={{ minWidth: 900 }}>
+                <Table sx={{ minWidth: 1040 }}>
                 <TableHeadCustom headCells={TABLE_HEAD} />
                 <TableBody>
                   {bills.map((bill) => {
@@ -596,7 +598,10 @@ export function PaymentCounterView() {
                         </TableCell>
                         <TableCell>{formatPeriod(bill)}</TableCell>
                         <TableCell>
-                          {formatCurrency(bill.nominal_tagihan)}
+                          {formatCurrency(bill.nominal_awal)}
+                        </TableCell>
+                        <TableCell>
+                          {formatCurrency(bill.nominal_potongan)}
                         </TableCell>
                         <TableCell>
                           {formatCurrency(bill.nominal_dibayar)}
