@@ -13,6 +13,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Dialog from "@mui/material/Dialog";
 import Button from "@mui/material/Button";
 import Radio from "@mui/material/Radio";
+import Collapse from "@mui/material/Collapse";
 import TableRow from "@mui/material/TableRow";
 import Checkbox from "@mui/material/Checkbox";
 import TableCell from "@mui/material/TableCell";
@@ -78,7 +79,7 @@ const MONTHS = [
 const TABLE_HEAD = [
   { id: "siswa", label: "SANTRI", width: 240 },
   { id: "jenis", label: "JENIS PEMBAYARAN", width: 220 },
-  { id: "periode", label: "PERIODE", width: 140 },
+  { id: "periode", label: "PERIODE", width: 260 },
   { id: "tagihan", label: "TAGIHAN", width: 140 },
   { id: "potongan", label: "POTONGAN", width: 140 },
   { id: "dibayar", label: "DIBAYAR", width: 140 },
@@ -87,6 +88,17 @@ const TABLE_HEAD = [
   { id: "status", label: "STATUS", width: 130 },
   { id: "actions", label: "", width: 80 },
 ];
+
+type BillGroup = {
+  id: string;
+  primary: BillDataRow;
+  bills: BillDataRow[];
+  nominal_awal: number;
+  nominal_potongan: number;
+  nominal_dibayar: number;
+  sisa_tagihan: number;
+  status: BillStatus;
+};
 
 const STATUS_OPTIONS: {
   value: "all" | BillStatus;
@@ -196,6 +208,77 @@ function getStudentOutstandingBills(rows: BillDataRow[], row: BillDataRow) {
     );
 }
 
+function getGroupStatus(bills: BillDataRow[]): BillStatus {
+  if (bills.every((bill) => bill.status === "lunas")) return "lunas";
+  if (bills.some((bill) => bill.status === "sebagian")) return "sebagian";
+  if (bills.some((bill) => bill.status === "belum_lunas")) return "belum_lunas";
+  if (bills.some((bill) => bill.status === "pending")) return "pending";
+  return bills[0]?.status ?? "pending";
+}
+
+function getGroupPeriod(group: BillGroup) {
+  if (group.bills.length === 1) return formatPeriod(group.primary);
+
+  const sorted = [...group.bills].sort((a, b) =>
+    String(a.periode_tahun ?? "").localeCompare(String(b.periode_tahun ?? "")) ||
+    Number(a.periode_bulan ?? 0) - Number(b.periode_bulan ?? 0),
+  );
+
+  return `${formatPeriod(sorted[0])} - ${formatPeriod(sorted[sorted.length - 1])}`;
+}
+
+function getGroupDueDate(group: BillGroup) {
+  const dueDates = group.bills
+    .map((bill) => bill.tanggal_jatuh_tempo)
+    .filter((value): value is string => !!value)
+    .sort();
+
+  return dueDates[0] ? fDate(dueDates[0]) : "-";
+}
+
+function groupBills(rows: BillDataRow[]): BillGroup[] {
+  const groups = new Map<string, BillGroup>();
+
+  rows.forEach((row) => {
+    const isMonthly = row.jenis_pembayaran_keuangan?.tipe_pembayaran === "Bulanan";
+    const key = isMonthly
+      ? [row.id_siswa, row.id_jenis_pembayaran, row.id_tahun_ajaran].join("|")
+      : row.id;
+
+    const existing = groups.get(key);
+
+    if (!existing) {
+      groups.set(key, {
+        id: key,
+        primary: row,
+        bills: [row],
+        nominal_awal: row.nominal_awal,
+        nominal_potongan: row.nominal_potongan,
+        nominal_dibayar: row.nominal_dibayar,
+        sisa_tagihan: row.sisa_tagihan,
+        status: row.status,
+      });
+      return;
+    }
+
+    existing.bills.push(row);
+    existing.nominal_awal += row.nominal_awal;
+    existing.nominal_potongan += row.nominal_potongan;
+    existing.nominal_dibayar += row.nominal_dibayar;
+    existing.sisa_tagihan += row.sisa_tagihan;
+    existing.status = getGroupStatus(existing.bills);
+  });
+
+  return [...groups.values()].map((group) => ({
+    ...group,
+    bills: group.bills.sort((a, b) =>
+      String(a.periode_tahun ?? "").localeCompare(String(b.periode_tahun ?? "")) ||
+      Number(a.periode_bulan ?? 0) - Number(b.periode_bulan ?? 0),
+    ),
+    status: getGroupStatus(group.bills),
+  }));
+}
+
 // ----------------------------------------------------------------------
 
 export function InvoiceListView() {
@@ -209,6 +292,7 @@ export function InvoiceListView() {
   const [className, setClassName] = useState("all");
   const [cabang, setCabang] = useState("all");
   const [messageRow, setMessageRow] = useState<BillDataRow | null>(null);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
 
   const paymentTypeOptions = useMemo(
     () =>
@@ -262,7 +346,8 @@ export function InvoiceListView() {
 
     return result;
   }, [academicYear, cabang, className, data, keyword, paymentType, status]);
-  const visibleRows = filteredData.slice(
+  const groupedData = useMemo(() => groupBills(filteredData), [filteredData]);
+  const visibleRows = groupedData.slice(
     table.page * table.rowsPerPage,
     table.page * table.rowsPerPage + table.rowsPerPage,
   );
@@ -291,7 +376,16 @@ export function InvoiceListView() {
     value: "all" | BillStatus,
   ) => {
     setStatus(value);
+    setExpandedGroups([]);
     table.onResetPage();
+  };
+
+  const handleToggleGroup = (groupId: string) => {
+    setExpandedGroups((current) =>
+      current.includes(groupId)
+        ? current.filter((id) => id !== groupId)
+        : [...current, groupId],
+    );
   };
 
   return (
@@ -508,24 +602,26 @@ export function InvoiceListView() {
           {visibleRows.map((row) => (
             <BillMobileCard
               key={row.id}
-              row={row}
+              group={row}
+              expanded={expandedGroups.includes(row.id)}
               selected={table.selected.includes(row.id)}
               onSelect={() => table.onSelectRow(row.id)}
-              onSendMessage={() => setMessageRow(row)}
+              onToggleExpand={() => handleToggleGroup(row.id)}
+              onSendMessage={() => setMessageRow(row.primary)}
             />
           ))}
-          <TableNoData notFound={!isLoading && !filteredData.length} />
+          <TableNoData notFound={!isLoading && !groupedData.length} />
         </Stack>
 
         <Box sx={{ position: "relative" }}>
           <TableSelectedAction
             dense={table.dense}
             numSelected={table.selected.length}
-            rowCount={filteredData.length}
+            rowCount={groupedData.length}
             onSelectAllRows={(checked) =>
               table.onSelectAllRows(
                 checked,
-                filteredData.map((row) => row.id),
+                groupedData.map((row) => row.id),
               )
             }
             action={
@@ -540,31 +636,34 @@ export function InvoiceListView() {
           <TableContainer
             sx={{ display: { xs: "none", md: "block" }, overflowX: "auto" }}
           >
-            <Table sx={{ minWidth: 1320 }}>
+            <Table sx={{ minWidth: 1440 }}>
               <TableHeadCustom
                 headCells={TABLE_HEAD}
-                rowCount={filteredData.length}
+                rowCount={groupedData.length}
                 numSelected={table.selected.length}
                 onSelectAllRows={(checked) =>
                   table.onSelectAllRows(
                     checked,
-                    filteredData.map((row) => row.id),
+                    groupedData.map((row) => row.id),
                   )
                 }
               />
               <TableBody>
-                {visibleRows.map((row) => {
-                  const statusConfig = getStatusConfig(row.status);
+                {visibleRows.map((group) => {
+                  const row = group.primary;
+                  const statusConfig = getStatusConfig(group.status);
+                  const expanded = expandedGroups.includes(group.id);
 
                   return (
-                    <TableRow hover key={row.id}>
+                    <>
+                    <TableRow hover key={group.id}>
                       <TableCell padding="checkbox">
                         <Checkbox
-                          checked={table.selected.includes(row.id)}
-                          onClick={() => table.onSelectRow(row.id)}
+                          checked={table.selected.includes(group.id)}
+                          onClick={() => table.onSelectRow(group.id)}
                           slotProps={{
                             input: {
-                              id: `${row.id}-checkbox`,
+                              id: `${group.id}-checkbox`,
                               "aria-label": `${row.id} checkbox`,
                             },
                           }}
@@ -586,23 +685,37 @@ export function InvoiceListView() {
                             ?.kode_jenis_pembayaran ?? "-"}
                         </Typography>
                       </TableCell>
-                      <TableCell>{formatPeriod(row)}</TableCell>
-                      <TableCell>{fCurrency(row.nominal_awal)}</TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={0.75} sx={{ alignItems: "center", minWidth: 240 }}>
+                          {group.bills.length > 1 && (
+                            <IconButton size="small" onClick={() => handleToggleGroup(group.id)}>
+                              <Iconify icon={expanded ? "eva:arrow-ios-upward-fill" : "eva:arrow-ios-downward-fill"} />
+                            </IconButton>
+                          )}
+                          <Box>
+                            <Typography variant="body2" sx={{ whiteSpace: "nowrap" }}>
+                              {getGroupPeriod(group)}
+                            </Typography>
+                            {group.bills.length > 1 && (
+                              <Typography variant="caption" sx={{ color: "text.secondary", whiteSpace: "nowrap" }}>
+                                {group.bills.length} bulan
+                              </Typography>
+                            )}
+                          </Box>
+                        </Stack>
+                      </TableCell>
+                      <TableCell>{fCurrency(group.nominal_awal)}</TableCell>
                       <TableCell>
                         <Typography
                           variant="body2"
-                          sx={{ color: row.nominal_potongan > 0 ? "success.main" : "text.secondary", fontWeight: row.nominal_potongan > 0 ? 600 : 400 }}
+                          sx={{ color: group.nominal_potongan > 0 ? "success.main" : "text.secondary", fontWeight: group.nominal_potongan > 0 ? 600 : 400 }}
                         >
-                          {fCurrency(row.nominal_potongan)}
+                          {fCurrency(group.nominal_potongan)}
                         </Typography>
                       </TableCell>
-                      <TableCell>{fCurrency(row.nominal_dibayar)}</TableCell>
-                      <TableCell>{fCurrency(row.sisa_tagihan)}</TableCell>
-                      <TableCell>
-                        {row.tanggal_jatuh_tempo
-                          ? fDate(row.tanggal_jatuh_tempo)
-                          : "-"}
-                      </TableCell>
+                      <TableCell>{fCurrency(group.nominal_dibayar)}</TableCell>
+                      <TableCell>{fCurrency(group.sisa_tagihan)}</TableCell>
+                      <TableCell>{getGroupDueDate(group)}</TableCell>
                       <TableCell>
                         <Label variant="soft" color={statusConfig.color}>
                           {statusConfig.label}
@@ -612,9 +725,19 @@ export function InvoiceListView() {
                         <BillActions row={row} onSendMessage={() => setMessageRow(row)} />
                       </TableCell>
                     </TableRow>
+                    {group.bills.length > 1 && (
+                      <TableRow>
+                        <TableCell colSpan={TABLE_HEAD.length + 1} sx={{ p: 0, borderBottom: expanded ? "1px solid" : 0, borderColor: "divider" }}>
+                          <Collapse in={expanded} timeout="auto" unmountOnExit>
+                            <MonthlyBillDetails bills={group.bills} />
+                          </Collapse>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    </>
                   );
                 })}
-                <TableNoData notFound={!isLoading && !filteredData.length} />
+                <TableNoData notFound={!isLoading && !groupedData.length} />
               </TableBody>
             </Table>
           </TableContainer>
@@ -623,7 +746,7 @@ export function InvoiceListView() {
         <TablePaginationCustom
           page={table.page}
           dense={table.dense}
-          count={filteredData.length}
+          count={groupedData.length}
           rowsPerPage={table.rowsPerPage}
           onPageChange={table.onChangePage}
           onChangeDense={table.onChangeDense}
@@ -642,17 +765,22 @@ export function InvoiceListView() {
 }
 
 function BillMobileCard({
-  row,
+  group,
+  expanded,
   selected,
   onSelect,
+  onToggleExpand,
   onSendMessage,
 }: {
-  row: BillDataRow;
+  group: BillGroup;
+  expanded: boolean;
   selected: boolean;
   onSelect: () => void;
+  onToggleExpand: () => void;
   onSendMessage: () => void;
 }) {
-  const statusConfig = getStatusConfig(row.status);
+  const row = group.primary;
+  const statusConfig = getStatusConfig(group.status);
 
   return (
     <Box
@@ -685,6 +813,11 @@ function BillMobileCard({
             <Label variant="soft" color={statusConfig.color}>
               {statusConfig.label}
             </Label>
+            {group.bills.length > 1 && (
+              <IconButton size="small" onClick={onToggleExpand}>
+                <Iconify icon={expanded ? "eva:arrow-ios-upward-fill" : "eva:arrow-ios-downward-fill"} />
+              </IconButton>
+            )}
             <BillActions row={row} onSendMessage={onSendMessage} />
           </Stack>
         </Stack>
@@ -695,22 +828,73 @@ function BillMobileCard({
           </Typography>
           <Typography variant="caption" sx={{ color: "text.secondary" }}>
             {row.jenis_pembayaran_keuangan?.kode_jenis_pembayaran ?? "-"} •{" "}
-            {formatPeriod(row)}
+            {getGroupPeriod(group)}
+            {group.bills.length > 1 ? ` • ${group.bills.length} bulan` : ""}
           </Typography>
         </Box>
 
         <Box sx={{ display: "grid", gap: 1, gridTemplateColumns: "1fr 1fr" }}>
-          <AmountInfo label="Tagihan" value={fCurrency(row.nominal_awal)} />
-          <AmountInfo label="Potongan" value={fCurrency(row.nominal_potongan)} />
-          <AmountInfo label="Dibayar" value={fCurrency(row.nominal_dibayar)} />
-          <AmountInfo label="Sisa" value={fCurrency(row.sisa_tagihan)} />
+          <AmountInfo label="Tagihan" value={fCurrency(group.nominal_awal)} />
+          <AmountInfo label="Potongan" value={fCurrency(group.nominal_potongan)} />
+          <AmountInfo label="Dibayar" value={fCurrency(group.nominal_dibayar)} />
+          <AmountInfo label="Sisa" value={fCurrency(group.sisa_tagihan)} />
           <AmountInfo
             label="Jatuh Tempo"
-            value={
-              row.tanggal_jatuh_tempo ? fDate(row.tanggal_jatuh_tempo) : "-"
-            }
+            value={getGroupDueDate(group)}
           />
         </Box>
+
+        {group.bills.length > 1 && (
+          <Collapse in={expanded} timeout="auto" unmountOnExit>
+            <MonthlyBillDetails bills={group.bills} compact />
+          </Collapse>
+        )}
+      </Stack>
+    </Box>
+  );
+}
+
+function MonthlyBillDetails({ bills, compact = false }: { bills: BillDataRow[]; compact?: boolean }) {
+  return (
+    <Box sx={{ px: compact ? 0 : 3, py: compact ? 1 : 2, bgcolor: "background.neutral" }}>
+      <Stack spacing={1}>
+        {bills.map((bill) => {
+          const statusConfig = getStatusConfig(bill.status);
+
+          return (
+            <Box
+              key={bill.id}
+              sx={{
+                display: "grid",
+                gap: 1,
+                alignItems: "center",
+                gridTemplateColumns: {
+                  xs: "1fr 1fr",
+                  md: "180px repeat(5, minmax(120px, 1fr))",
+                },
+                p: 1.25,
+                borderRadius: 1.5,
+                bgcolor: "background.paper",
+              }}
+            >
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                {formatPeriod(bill)}
+              </Typography>
+              <Typography variant="body2">Tagihan {fCurrency(bill.nominal_awal)}</Typography>
+              <Typography variant="body2">Potongan {fCurrency(bill.nominal_potongan)}</Typography>
+              <Typography variant="body2">Dibayar {fCurrency(bill.nominal_dibayar)}</Typography>
+              <Typography variant="body2" sx={{ color: bill.sisa_tagihan > 0 ? "error.main" : "success.main", fontWeight: 600 }}>
+                Sisa {fCurrency(bill.sisa_tagihan)}
+              </Typography>
+              <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                <Label variant="soft" color={statusConfig.color}>{statusConfig.label}</Label>
+                <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                  {bill.tanggal_jatuh_tempo ? fDate(bill.tanggal_jatuh_tempo) : "-"}
+                </Typography>
+              </Stack>
+            </Box>
+          );
+        })}
       </Stack>
     </Box>
   );

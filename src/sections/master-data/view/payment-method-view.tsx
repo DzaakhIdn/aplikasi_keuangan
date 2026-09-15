@@ -115,7 +115,15 @@ export function PaymentMethodView() {
     createPaymentMethod.mutate(payload, {
       onSuccess: () => {
         toast.success("Pembayaran berhasil ditambahkan");
-        form.reset();
+        updateFilters({ academicYear: data.id_tahun_ajaran });
+        form.reset({
+          kode_jenis_pembayaran: "",
+          nama_pembayaran: "",
+          id_tahun_ajaran: data.id_tahun_ajaran,
+          tipe_pembayaran: "Bulanan",
+          nominal: 0,
+          tanggal_jatuh_tempo: null,
+        });
         openDialog.onFalse();
       },
       onError: (err: Error) => toast.error(err.message),
@@ -198,7 +206,12 @@ export function PaymentMethodView() {
           action={
             <Button
               onClick={() => {
-                form.setValue("id_tahun_ajaran", activeAcademicYear?.id || "");
+                form.setValue(
+                  "id_tahun_ajaran",
+                  selectedAcademicYear !== "all"
+                    ? selectedAcademicYear
+                    : activeAcademicYear?.id || "",
+                );
                 openDialog.onTrue();
               }}
               variant="contained"
@@ -389,7 +402,7 @@ export function PaymentMethodView() {
                   >
                     {tahunAjaranList.map((ta) => (
                       <MenuItem key={ta.id} value={ta.id}>
-                        {ta.tahun_ajaran}
+                        {ta.tahun_ajaran} ({ta.status})
                       </MenuItem>
                     ))}
                   </TextField>
